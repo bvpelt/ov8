@@ -1,0 +1,86 @@
+application:
+  key: "9dd059be604f3e0b8742724eae817a49d4561fe22bf3519d10d7431dd4b188e4" # using jwtsecret.com/generate 32 bytes 256 bits
+  key-lifetime: 1000000 # ms
+  basePath: "/adres/api/v1"
+
+logging:
+  level:
+    org:
+      apache:
+        http: debug
+      springframework:
+        security: info
+    com:
+      bsoft: debug
+
+spring:
+  application:
+    name: '@project.name@'
+  main:
+    banner-mode: 'off'
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ov8}
+    username: ${SPRING_DATASOURCE_USERNAME:testuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:12345}
+  flyway:
+    enabled: true
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ov8}
+    user: ${SPRING_DATASOURCE_USERNAME:testuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:12345}
+    validateMigrationNaming: true
+    locations: classpath:db/migration/postgresql
+  jpa:
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        fomat_sql: true
+info:
+  project:
+    name: ${spring.application.name}
+    version: @project.version@
+    description: @project.description@
+  environment: ${spring.profiles.active}
+
+management:
+  endpoint:
+    env:
+      show-values: always
+    configprops:
+      show-values: always
+    health:
+      show-details: always
+    metrics:
+      access: read_only
+    prometheus:
+      access: read_only
+    shutdown:
+      access: unrestricted
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+    java:
+      enabled: true
+    os:
+      enabled: true
+    process:
+      enabled: true
+  endpoints:
+    web:
+      path-mapping:
+        info: app-info
+        health: app-health
+      exposure:
+        include: '*'
+        exclude:
+  server:
+    port: 8080

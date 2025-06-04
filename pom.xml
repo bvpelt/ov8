@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.0</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>bsoft.ov8</groupId>
+	<artifactId>loader</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>loader</name>
+	<description>Demo project for Spring Boot</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openapitools</groupId>
+			<artifactId>jackson-databind-nullable</artifactId>
+			<version>0.2.6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations-jakarta</artifactId>
+			<version>2.2.28</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>3.0.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- testing -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>7.9.0</version>
+				<executions>
+					<execution>
+						<!-- ozon v8 api -->
+						<id>generate-ozon-v8-api</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+
+							<inputSpec>${project.basedir}/src/main/resources/ozon-presenteren-v8.0.2.json</inputSpec>
+
+							<generatorName>spring</generatorName>
+							<library>spring-boot</library>
+							<supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+							<configOptions>
+								<apiPackage>com.bsoft.ov8.generated.api</apiPackage>
+								<basePackage>com.bsoft.ov8.generated</basePackage>
+								<configPackage>com.bsoft.ov8.generated.generated.configuration</configPackage>
+								<dateLibrary>java8</dateLibrary>
+								<delegatePattern>true</delegatePattern>
+								<generateAliasAsModel>true</generateAliasAsModel>
+								<hideGenerationTimestamp>true</hideGenerationTimestamp>
+								<interfaceOnly>true</interfaceOnly>
+								<invokerPackage>com.bsoft.ov8.generated.invoker</invokerPackage>
+								<modelPackage>com.bsoft.ov8.generated.model</modelPackage>
+								<requestMappingMode>none</requestMappingMode>
+								<serializationLibrary>jackson</serializationLibrary>
+								<skipDefaultInterface>true</skipDefaultInterface>
+								<useBeanValidation>false</useBeanValidation>
+								<useJakartaEe>true</useJakartaEe>
+								<useSpringBoot3>true</useSpringBoot3>
+								<validateSpec>true</validateSpec>
+								<sourceFolder>target/generated-sources/openapi/src/main/java</sourceFolder>
+							</configOptions>
+							<schemaMappings>
+								<schemaMapping>ProblemDetail=org.springframework.http.ProblemDetail</schemaMapping>
+								<!--
+                                <schemaMapping>GeoJSONGeometry=org.wololo.geojson.GeoJSON</schemaMapping>
+                                <schemaMapping>Point=org.wololo.geojson.Point</schemaMapping>
+                                <schemaMapping>MultiPoint=org.wololo.geojson.MultiPoint</schemaMapping>
+                                <schemaMapping>LineString=org.wololo.geojson.LineString</schemaMapping>
+                                <schemaMapping>MultiLineString=org.wololo.geojson.MultiLineString</schemaMapping>
+                                <schemaMapping>Polygon=org.wololo.geojson.Polygon</schemaMapping>
+                                <schemaMapping>MultiPolygon=org.wololo.geojson.MultiPolygon</schemaMapping>
+                                <schemaMapping>GeometryCollection=org.wololo.geojson.GeometryCollection</schemaMapping>
+                                -->
+								<schemaMapping>Health=org.springframework.boot.actuate.health.Status</schemaMapping>
+								<schemaMapping>Info=Object</schemaMapping>
+							</schemaMappings>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
