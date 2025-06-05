@@ -92,6 +92,10 @@ feign:
         connectTimeout: 5000
         readTimeout: 10000
         loggerLevel: basic # Or full for more detailed logging
-      ozonApiClient: # Specific configuration for a client named 'ozonApiClient' (if you name it)
+      ozonRegelingenService: # Specific configuration for a client named 'ozonApiClient' (if you name it)
         url: ${OZON_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/} # http://localhost:8080 # Replace with the actual URL of your Ozon service
         # You might also define this directly in the @FeignClient annotation if you prefer
+
+api:
+  ozon:
+    key: ${OZON_API_KEY:8b9b4c2f-81a8-490a-acf4-82d82c77beee} # Replace with your actual API key

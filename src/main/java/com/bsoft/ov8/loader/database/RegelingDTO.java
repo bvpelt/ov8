@@ -1,6 +1,5 @@
 package com.bsoft.ov8.loader.database;
 
-import com.bsoft.ov8.generated.model.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,9 +10,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Data
