@@ -1,13 +1,13 @@
 package com.bsoft.ov8.loader.database;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -18,10 +18,16 @@ public class SoortRegelingDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
     @Column(name = "code")
     private String code;
 
     @Column(name = "waarde")
     private String waarde;
 
+    @ManyToMany(mappedBy = "type", fetch = FetchType.LAZY) // 'mappedBy' indicates the owning side
+    private Set<RegelingDTO> regelingen = new HashSet<>();
 }
