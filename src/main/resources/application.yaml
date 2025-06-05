@@ -84,3 +84,14 @@ management:
         exclude:
   server:
     port: 8080
+
+feign:
+  client:
+    config:
+      default: # Apply to all Feign clients
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic # Or full for more detailed logging
+      ozonApiClient: # Specific configuration for a client named 'ozonApiClient' (if you name it)
+        url: ${OZON_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/} # http://localhost:8080 # Replace with the actual URL of your Ozon service
+        # You might also define this directly in the @FeignClient annotation if you prefer
