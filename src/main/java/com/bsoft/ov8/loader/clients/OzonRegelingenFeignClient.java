@@ -1,12 +1,14 @@
 package com.bsoft.ov8.loader.clients;
 
+import com.bsoft.ov8.loader.config.FeignClientConfig;
 import com.bsoft.ov8.ozonclient.api.RegelingenApi;
 import org.springframework.cloud.openfeign.FeignClient;
 
 // Define the Feign client
 @FeignClient(
         name = "ozonRegelingenService", // A unique name for your Feign client
-        url = "${feign.client.config.ozonRegelingenService.url}" // Points to configuration
+        url = "${feign.client.config.ozonRegelingenService.url}", // Points to configuration
+        configuration = FeignClientConfig.class
 )
 // Or if you prefer to hardcode the URL (less flexible for environments):
 // @FeignClient(name = "ozonRegelingenService", url = "http://localhost:8080")
