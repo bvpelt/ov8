@@ -107,7 +107,10 @@
             <version>3.0.2</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
         <!-- testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -176,8 +179,8 @@
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/ozon-presenteren-v8.0.2.json</inputSpec>
                             <generatorName>spring</generatorName>
-                            <apiPackage>com.bsoft.ov8.ozonclient.api</apiPackage>
-                            <modelPackage>com.bsoft.ov8.ozonclient.model</modelPackage>
+                            <apiPackage>com.bsoft.ov8.loader.ozonclient.api</apiPackage>
+                            <modelPackage>com.bsoft.ov8.loader.ozonclient.model</modelPackage>
                             <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
                             <configOptions>
                                 <delegatePattern>true</delegatePattern>

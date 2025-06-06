@@ -12,6 +12,7 @@ logging:
         security: info
     com:
       bsoft: debug
+    feign: debug
 
 spring:
   application:
@@ -91,9 +92,9 @@ feign:
       default: # Apply to all Feign clients
         connectTimeout: 5000
         readTimeout: 10000
-        loggerLevel: basic # Or full for more detailed logging
-      ozonRegelingenService: # Specific configuration for a client named 'ozonApiClient' (if you name it)
-        url: ${OZON_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/} # http://localhost:8080 # Replace with the actual URL of your Ozon service
+        loggerLevel: full # Or full for more detailed logging
+      ozonRegelingenClient: # Specific configuration for a client named 'ozonApiClient' (if you name it)
+        url: ${OZON_REGELING_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8}/regelingen # http://localhost:8080 # Replace with the actual URL of your Ozon service
         # You might also define this directly in the @FeignClient annotation if you prefer
 
 api:

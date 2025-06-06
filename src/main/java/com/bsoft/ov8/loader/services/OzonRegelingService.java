@@ -1,9 +1,9 @@
 package com.bsoft.ov8.loader.services;
 
-import com.bsoft.ov8.ozonclient.api.RegelingenApi;
-import com.bsoft.ov8.ozonclient.model.Regeling;
-import com.bsoft.ov8.ozonclient.model.Regelingen;
-import com.bsoft.ov8.ozonclient.model.RegelingenSort;
+import com.bsoft.ov8.loader.ozonclient.api.RegelingenApi;
+import com.bsoft.ov8.loader.ozonclient.model.Regeling;
+import com.bsoft.ov8.loader.ozonclient.model.Regelingen;
+import com.bsoft.ov8.loader.ozonclient.model.RegelingenSort;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,28 +22,32 @@ public class OzonRegelingService {
         this.regelingenApi = regelingenApi;
     }
 
-    public List<Regeling> getAllRegelingen() {
+    public List<Regeling> getAllRegelingen(Integer page ) {
         try {
-            int page = 1;
+
             int size = 200;
             List<RegelingenSort> sort = List.of(RegelingenSort._REGISTRATIETIJDSTIP);
 
             // The generated interface methods return ResponseEntity<T> by default
             ResponseEntity<Regelingen> response = regelingenApi._getRegelingen(null, null, null, null, false, page, size, sort);
             if (response.getStatusCode().is2xxSuccessful()) {
-                return response.getBody().getEmbedded().getRegelingen();
+                if (response.getBody() != null) {
+                    return response.getBody().getEmbedded().getRegelingen();
+                } else {
+                    return List.of();
+                }
             } else {
                 // Handle non-2xx responses
-                log.error("Failed to retrieve regelingen: " + response.getStatusCode());
+                log.error("Failed to retrieve regelingen: {} ", response.getStatusCode());
                 return List.of(); // Or throw a custom exception
             }
         } catch (FeignException e) {
             // FeignException wraps HTTP errors
-            log.error("Error calling Ozon API: " + e.status() + " - " + e.getMessage());
+            log.error("Error calling Ozon API: {} - {}", e.status(), e.getMessage());
             // You might want to wrap this in a custom business exception
             throw new RuntimeException("Failed to connect to Ozon service", e);
         } catch (Exception e) {
-            log.error("An unexpected error occurred: " + e.getMessage());
+            log.error("An unexpected error occurred: {}", e.getMessage());
             throw new RuntimeException("Unexpected error during Ozon API call", e);
         }
     }
