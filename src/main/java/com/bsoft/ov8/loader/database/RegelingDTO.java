@@ -2,6 +2,8 @@ package com.bsoft.ov8.loader.database;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
@@ -14,6 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"bevoegdGezag", "type"})
 @Entity
 @Table(name = "regeling", schema = "public", catalog = "ov8")
 public class RegelingDTO implements Serializable {
@@ -26,28 +30,27 @@ public class RegelingDTO implements Serializable {
     private Long id;
 
     @Column(name = "identificatie")
-    private URI identificatie;
+    private String identificatie;
 
-    @Column(name = "officieleTitel")
+    @Column(name = "officieletitel")
     private String officieleTitel;
 
     //
     // aangeleverd door bevoegd gezag
     //
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    }, fetch = FetchType.LAZY)
-    @JoinTable(name = "regeling_bevoegdgezag", // Name of the join table
-            joinColumns = @JoinColumn(name = "regeling_id"), // Foreign key for Regeling
-            inverseJoinColumns = @JoinColumn(name = "bevoegdgezag_id")) // Foreign key for BevoegdGezag
-    private Set<BevoegdGezagDTO> bevoegdGezagen = new HashSet<>();
+
+    // This is the "many" side of the Many-to-One relationship.
+    // Each RegelingDTO has one BevoegdGezagDTO.
+    // The foreign key column will be created in the 'regeling' table.
+    @ManyToOne // Default fetch type is EAGER for ManyToOne, consider LAZY if performance is an issue
+    @JoinColumn(name = "bevoegdgezag_id") // Specifies the foreign key column name in the RegelingDTO table
+    private BevoegdGezagDTO bevoegdGezag; // Singular, as each Regeling has one BG
 
     /*
     @Column(name = "links")
     private RegelingLinks links;
     */
-
+/*
     @ManyToMany(cascade = {
             CascadeType.PERSIST,
             CascadeType.MERGE
@@ -56,6 +59,13 @@ public class RegelingDTO implements Serializable {
             joinColumns = @JoinColumn(name = "regeling_id"), // Foreign key for Regeling
             inverseJoinColumns = @JoinColumn(name = "soortregeling_id")) // Foreign key for Soortregeling
     private Set<SoortRegelingDTO> type = new HashSet<>();
+*/
+    // This is the "many" side of the Many-to-One relationship.
+    // Each RegelingDTO has one BevoegdGezagDTO.
+    // The foreign key column will be created in the 'regeling' table.
+    @ManyToOne // Default fetch type is EAGER for ManyToOne, consider LAZY if performance is an issue
+    @JoinColumn(name = "soortregeling_id") // Specifies the foreign key column name in the RegelingDTO table
+    private SoortRegelingDTO type; // Singular, as each Regeling has one BG
 
     //
     // registratie gegevens
@@ -64,30 +74,30 @@ public class RegelingDTO implements Serializable {
     private BigDecimal versie;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "beginInwerking")
+    @Column(name = "begininwerking")
     private LocalDate beginInwerking;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "beginGeldigheid")
+    @Column(name = "begingeldigheid")
     private LocalDate beginGeldigheid;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "eindGeldigheid")
+    @Column(name = "eindgeldigheid")
     private LocalDate eindGeldigheid;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "tijdstipRegistratie")
+    @Column(name = "tijdstipregistratie")
     private OffsetDateTime tijdstipRegistratie;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "eindRegistratie")
+    @Column(name = "eindregistratie")
     private OffsetDateTime eindRegistratie;
 
     //
     // einde registratie gegevens
     //
 
-    @Column(name = "citeerTitel")
+    @Column(name = "citeertitel")
     private String citeerTitel;
 
     @Column(name = "opschrift")
@@ -101,19 +111,19 @@ public class RegelingDTO implements Serializable {
     private List<RegelingDTO> opvolgerVan = new ArrayList();
     */
 
-    @Column(name = "heeftBijlagen")
+    @Column(name = "heeftbijlagen")
     private Boolean heeftBijlagen;
 
-    @Column(name = "heeftToelichtingen")
+    @Column(name = "heefttoelichtingen")
     private Boolean heeftToelichtingen;
 
-    @Column(name = "publicatieID")
+    @Column(name = "publicatieid")
     private String publicatieID;
 
-    @Column(name = "inwerkingTot")
+    @Column(name = "inwerkingtot")
     private String inwerkingTot;
 
-    @Column(name = "geldigTot")
+    @Column(name = "geldigtot")
     private String geldigTot;
 
     /*
@@ -121,24 +131,4 @@ public class RegelingDTO implements Serializable {
     private RegelingAllOfEmbedded embedded;
      */
 
-    // Helper methods to manage the relationship (optional but good practice)
-    public void addBevoegdGezag(BevoegdGezagDTO bevoegdGezag) {
-        this.bevoegdGezagen.add(bevoegdGezag);
-        bevoegdGezag.getRegelingen().add(this); // Maintain the other side
-    }
-
-    public void removeBevoegdGezag(BevoegdGezagDTO bevoegdGezag) {
-        this.bevoegdGezagen.remove(bevoegdGezag);
-        bevoegdGezag.getRegelingen().remove(this); // Maintain the other side
-    }
-
-    public void addSoortRegeling(SoortRegelingDTO soortRegeling) {
-        this.type.add(soortRegeling);
-        soortRegeling.getRegelingen().add(this); // Maintain the other side
-    }
-
-    public void removeSoortRegeling(SoortRegelingDTO soortRegeling) {
-        this.type.remove(soortRegeling);
-        soortRegeling.getRegelingen().remove(this); // Maintain the other side
-    }
 }

@@ -1,7 +1,3 @@
-application:
-  key: "9dd059be604f3e0b8742724eae817a49d4561fe22bf3519d10d7431dd4b188e4" # using jwtsecret.com/generate 32 bytes 256 bits
-  key-lifetime: 1000000 # ms
-  basePath: "/adres/api/v1"
 
 logging:
   level:
@@ -10,9 +6,18 @@ logging:
         http: debug
       springframework:
         security: info
+        web:
+          reactive:
+            function:
+              client: DEBUG
+          client: DEBUG
     com:
       bsoft: debug
-    feign: debug
+    reactor:
+      netty:
+        http:
+          client: DEBUG
+          HttpClient: DEBUG
 
 spring:
   application:
@@ -86,17 +91,7 @@ management:
   server:
     port: 8080
 
-feign:
-  client:
-    config:
-      default: # Apply to all Feign clients
-        connectTimeout: 5000
-        readTimeout: 10000
-        loggerLevel: full # Or full for more detailed logging
-      ozonRegelingenClient: # Specific configuration for a client named 'ozonApiClient' (if you name it)
-        url: ${OZON_REGELING_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8}/regelingen # http://localhost:8080 # Replace with the actual URL of your Ozon service
-        # You might also define this directly in the @FeignClient annotation if you prefer
-
 api:
   ozon:
-    key: ${OZON_API_KEY:8b9b4c2f-81a8-490a-acf4-82d82c77beee} # Replace with your actual API key
+    base-url: ${OZON_BASE_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8}
+    api-key: ${OZON_API_KEY:8b9b4c2f-81a8-490a-acf4-82d82c77beee} # Replace with your actual API key
