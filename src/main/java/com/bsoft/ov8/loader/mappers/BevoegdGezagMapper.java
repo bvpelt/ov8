@@ -4,12 +4,7 @@ import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
 import nl.overheid.omgevingswet.ozon.model.BevoegdGezag;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface BevoegdGezagMapper {

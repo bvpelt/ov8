@@ -8,27 +8,24 @@ import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.api.RegelingenApi;
 import nl.overheid.omgevingswet.ozon.model.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-
-import static java.util.Spliterators.iterator;
 
 @Slf4j
 @Service
@@ -131,9 +128,11 @@ public class OzonRegelingenClient implements RegelingenApi {
                 });
     }
 
-    // --- Convenience method for your application (recommended usage) ---
-    // This method does NOT include ServerWebExchange, making it easier to call from your services.
-    public Flux<Regeling> getIndividualRegelingen(
+    /**
+     * Fetches Regelingen and extracts individual Regeling objects into a Flux for processing.
+     * Handles pagination if you're calling this repeatedly for different pages.
+     */
+    public Flux<Regeling> getIndividualRegelingenFlux(
             LocalDate geldigOp,
             LocalDate inWerkingOp,
             OffsetDateTime beschikbaarOp,
@@ -141,53 +140,100 @@ public class OzonRegelingenClient implements RegelingenApi {
             Boolean expand,
             Integer page,
             Integer size,
-            List<RegelingenSort> sort
+            List<RegelingenSort> sort,
+            ServerWebExchange exchange // Pass through if needed by _getRegelingen
     ) {
-        // When calling _getRegelingen, just pass null for the ServerWebExchange parameter
-        return _getRegelingen(geldigOp, inWerkingOp, beschikbaarOp, synchroniseerMetTileset, expand, page, size, sort, null)
+        return _getRegelingen(geldigOp, inWerkingOp, beschikbaarOp, synchroniseerMetTileset, expand, page, size, sort, exchange)
                 .flatMapMany(responseEntity -> {
-
-                    // Check for non-successful status codes that might not be caught by onStatus() yet
+                    // Check if the response is successful first
                     if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+                        // If _getRegelingen didn't throw an OzonApiException (e.g., in a doOnError),
+                        // we can still propagate an error here.
                         HttpStatusCode statusCode = responseEntity.getStatusCode();
-                        String reasonPhrase;
-                        if (statusCode instanceof HttpStatus httpStatus) { // Use pattern matching for instanceof
-                            reasonPhrase = httpStatus.getReasonPhrase();
-                        } else {
-                            reasonPhrase = "Unknown Status"; // Fallback for custom HttpStatusCode implementations
-                        }
-
-                        String errorMessage = String.format("Received non-successful response from Ozon API: %s %s",
-                                statusCode.value(), reasonPhrase);
+                        String errorMessage = String.format("API call for regelingen failed with status %d", statusCode.value());
                         log.error(errorMessage);
-                        // Propagate a more specific exception if the status is an error
-                        return Flux.error(new WebClientResponseException(
-                                statusCode.value(),
-                                reasonPhrase, // Use the resolved reasonPhrase
-                                null, // Headers, if needed
-                                null, // Body as byte[], if needed
-                                null // Charset, if needed
-                        ));
+                        return Flux.error(new OzonApiException(errorMessage, statusCode, null));
                     }
 
-                    if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                        Regelingen wrapper = responseEntity.getBody();
-                        Page curpage = wrapper.getPage();
+                    Regelingen regelingenWrapper = responseEntity.getBody();
 
-                        if (wrapper.getEmbedded() != null && wrapper.getEmbedded().getRegelingen() != null) {
-                            return Flux.fromIterable(wrapper.getEmbedded().getRegelingen());
-                        }
-                    }
-                    log.warn("Received non-successful response or empty body for regelingen: {}", responseEntity.getStatusCode());
-                    return Flux.empty();
+                    // Safely extract the list of regelingen
+                    List<Regeling> regelingList = Objects.requireNonNullElseGet(
+                            regelingenWrapper != null && regelingenWrapper.getEmbedded() != null ?
+                                    regelingenWrapper.getEmbedded().getRegelingen() : null,
+                            List::of // If any part is null, return an empty list
+                    );
+
+                    // Convert the List<Regeling> into a Flux<Regeling>
+                    return Flux.fromIterable(regelingList);
                 })
-                .doOnError(e -> {
-                    log.error("Error processing individual regelingen: {}", e.getMessage());
-                });
+                .doOnError(e -> log.error("Error processing individual regelingen: {}", e.getMessage(), e));
     }
 
-    // Example of how to use the convenience method (e.g., from a service or controller)
-    public void processEachRegeling(
+    // Example of how you might use getIndividualRegelingenFlux in a service
+    // (This is illustrative, your actual usage might differ)
+    public Mono<Void> processAllRegelingen(
+            LocalDate geldigOp,
+            LocalDate inWerkingOp,
+            OffsetDateTime beschikbaarOp,
+            String synchroniseerMetTileset,
+            Boolean expand,
+            // Assuming you want to iterate through multiple pages
+            int startPage,
+            int endPage,
+            int pageSize,
+            List<RegelingenSort> sort,
+            ServerWebExchange exchange
+    ) {
+        // Create a Flux of page numbers
+        return Flux.range(startPage, endPage - startPage + 1)
+                // Use flatMap to make the API call for each page
+                // Limit concurrency to avoid the "Pending acquire queue" error
+                .flatMap(page -> getIndividualRegelingenFlux(
+                                geldigOp,
+                                inWerkingOp,
+                                beschikbaarOp,
+                                synchroniseerMetTileset,
+                                expand,
+                                page, // Pass the current page number
+                                pageSize,
+                                sort,
+                                exchange
+                        )
+                                .doOnNext(regeling -> {
+                                    log.info("Processing regeling from page {}: {}", page, regeling.getIdentificatie());
+                                    log.info("regeling: {}", regeling);
+                                    RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
+                                    log.trace("regelingDTO: {}", regelingDTO.toString());
+                                    saveRegeling(regelingDTO);
+                                }), // Example processing
+                        5) // Limit to 5 concurrent page fetches
+                .onErrorResume(OzonApiException.class, e -> {
+                    log.error("Failed to fetch regelingen from Ozon API: {} - Status: {}", e.getMessage(), e.getStatusCode());
+                    return Mono.empty(); // Or Mono.error(e) if you want to propagate the error further
+                })
+                .then() // This collects the results of the flatMap and returns Mono<Void>
+                .doOnSuccess(voidResult -> log.info("Ready processing")) // This will execute when the entire stream completes successfully
+                .doOnError(throwable -> log.error("An error occurred after processing: {}", throwable.getMessage())) // Optional: log if an error happened at the very end
+                .then(); // Ensure the final return type is Mono<Void>
+    }
+
+    private Mono<Void> processSingleRegeling(Regeling regeling) {
+        log.info("Processing Regeling: {}", regeling.getIdentificatie());
+        // Add your actual processing logic here, e.g.:
+        // - Save to database
+        // - Send to another service
+        // - Apply business rules
+        return Mono.delay(Duration.ofMillis(100)) // Simulate some async work
+                .then();
+    }
+
+    /**
+     * This method fetches a page of Regelingen and then extracts and processes
+     * each individual Regeling from the embedded list.
+     * It returns a Flux<Regeling> to allow for streaming and processing each item.
+     */
+    public Flux<Regeling> getAndProcessIndividualRegelingen(
             LocalDate geldigOp,
             LocalDate inWerkingOp,
             OffsetDateTime beschikbaarOp,
@@ -197,26 +243,52 @@ public class OzonRegelingenClient implements RegelingenApi {
             Integer size,
             List<RegelingenSort> sort
     ) {
-        getIndividualRegelingen(geldigOp, inWerkingOp, beschikbaarOp, synchroniseerMetTileset, expand, page, size, sort)
+        return _getRegelingen(geldigOp, inWerkingOp, beschikbaarOp, synchroniseerMetTileset, expand, page, size, sort, null)
+                // Use flatMapMany to transform the Mono<ResponseEntity<Regelingen>> into a Flux<Regeling>
+                .flatMapMany(responseEntity -> {
+                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                        Regelingen wrapper = responseEntity.getBody();
+                        if (wrapper != null && wrapper.getEmbedded() != null && wrapper.getEmbedded().getRegelingen() != null) {
+                            return Flux.fromIterable(wrapper.getEmbedded().getRegelingen());
+                        } else {
+                            log.warn("Received successful response but body or embedded regelingen were null/empty for page {}.", page);
+                            return Flux.empty(); // No regelingen found for this page
+                        }
+                    } else {
+                        // This else block might be redundant if onStatus handles all errors,
+                        // but it's good for clarity if an error somehow slips through or if
+                        // you want different handling for a non-2xx response that isn't
+                        // necessarily an "error" you want to throw an exception for yet.
+                        log.warn("Received non-2xx status code {}. Not processing regelingen for this page.", responseEntity.getStatusCode().value());
+                        return Flux.empty(); // Or Flux.error(new RuntimeException("Bad status")) if you want to propagate an error here.
+                    }
+                })
                 .doOnNext(regeling -> {
+                    // This is where you process EACH individual Regeling
+                    log.info("Processing Regeling with ID: {}", regeling.getIdentificatie());
                     log.info("Processing individual Regeling id: {}", regeling.getIdentificatie());
-                    log.info("regeling: {}", regeling.toString());
+                    log.info("regeling: {}", regeling);
                     RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
                     log.trace("regelingDTO: {}", regelingDTO.toString());
                     saveRegeling(regelingDTO);
                 })
-                .doOnError(e -> log.error("Error during processing individual Regeling: {}", e.getMessage()))
-                .subscribe();
+                .doOnError(e -> {
+                    // This doOnError catches any error that occurred upstream in this Flux pipeline.
+                    // This includes OzonApiException (from _getRegelingen) or any error
+                    // during the flatMapMany transformation (e.g., NullPointerException if you had bad logic).
+                    log.error("Error processing individual regelingen for page {}: {}", page, e.getMessage(), e);
+                    // The error will propagate to the subscriber of this Flux
+                });
     }
 
-    @Transactional
+    //@Transactional
     public void saveRegeling(RegelingDTO regelingDTO) {
 
         String bevoegdGezagCode;
         Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO;
         BevoegdGezagDTO savedBevoegdGezagDTO = null;
 
-        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(regelingDTO.getIdentificatie().toString(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
 
         if (optionalRegelingDTO.isEmpty()) {
             if (regelingDTO.getBevoegdGezag() != null) {
@@ -248,7 +320,7 @@ public class OzonRegelingenClient implements RegelingenApi {
 
             regelingRepository.save(regelingDTO);
         } else {
-            log.info("Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists", regelingDTO.getIdentificatie().toString(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+            log.info("Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists", regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
         }
     }
 }

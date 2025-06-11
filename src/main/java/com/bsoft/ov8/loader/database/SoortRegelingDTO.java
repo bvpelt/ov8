@@ -29,10 +29,10 @@ public class SoortRegelingDTO implements Serializable {
 
     @Column(name = "waarde")
     private String waarde;
-/*
-    @ManyToMany(mappedBy = "type", fetch = FetchType.LAZY) // 'mappedBy' indicates the owning side
-    private Set<RegelingDTO> regelingen = new HashSet<>();
-*/
+    /*
+        @ManyToMany(mappedBy = "type", fetch = FetchType.LAZY) // 'mappedBy' indicates the owning side
+        private Set<RegelingDTO> regelingen = new HashSet<>();
+    */
     // This is the "one" side of the Many-to-One relationship from RegelingDTO.
     // It's the inverse side, used for navigation from BevoegdGezag to all Regelingen using it.
     // 'mappedBy' refers to the field name in the 'RegelingDTO' entity that owns the relationship.

@@ -15,5 +15,5 @@ public interface RegelingRepository extends PagingAndSortingRepository<RegelingD
         CrudRepository<RegelingDTO, Long>,
         JpaSpecificationExecutor<RegelingDTO> {
 
-    Optional<RegelingDTO> findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid (String identificatie, OffsetDateTime tijdstipRegistratie, LocalDate beginGeldigheid);
+    Optional<RegelingDTO> findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(String identificatie, OffsetDateTime tijdstipRegistratie, LocalDate beginGeldigheid);
 }

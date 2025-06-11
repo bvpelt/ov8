@@ -9,7 +9,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -38,7 +37,6 @@ public class RegelingDTO implements Serializable {
     //
     // aangeleverd door bevoegd gezag
     //
-
     // This is the "many" side of the Many-to-One relationship.
     // Each RegelingDTO has one BevoegdGezagDTO.
     // The foreign key column will be created in the 'regeling' table.
@@ -50,16 +48,7 @@ public class RegelingDTO implements Serializable {
     @Column(name = "links")
     private RegelingLinks links;
     */
-/*
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    }, fetch = FetchType.LAZY)
-    @JoinTable(name = "regeling_soortregeling", // Name of the join table
-            joinColumns = @JoinColumn(name = "regeling_id"), // Foreign key for Regeling
-            inverseJoinColumns = @JoinColumn(name = "soortregeling_id")) // Foreign key for Soortregeling
-    private Set<SoortRegelingDTO> type = new HashSet<>();
-*/
+
     // This is the "many" side of the Many-to-One relationship.
     // Each RegelingDTO has one BevoegdGezagDTO.
     // The foreign key column will be created in the 'regeling' table.
@@ -106,10 +95,14 @@ public class RegelingDTO implements Serializable {
     @Column(name = "conditie")
     private String conditie;
 
-    /*
-    @Column(name = "opvolgerVan")
-    private List<RegelingDTO> opvolgerVan = new ArrayList();
-    */
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "regeling_opvolgervan", // This will be the name of your join table
+            joinColumns = @JoinColumn(name = "regeling_id"), // Column in the join table referring to THIS RegelingDTO
+            inverseJoinColumns = @JoinColumn(name = "opvolgerregeling_id") // Column in the join table referring to the OTHER RegelingDTO (the one it succeeds)
+    )
+    // It's generally better to use Set for ManyToMany to avoid duplicate entries and for better performance
+    private Set<RegelingDTO> opvolgerVan = new HashSet<>();
 
     @Column(name = "heeftbijlagen")
     private Boolean heeftBijlagen;
@@ -130,5 +123,16 @@ public class RegelingDTO implements Serializable {
     @Column(name = "embedded")
     private RegelingAllOfEmbedded embedded;
      */
+
+    // Helper methods to manage the relationship (optional but good practice)
+    public void addOpvolgerVan(RegelingDTO opvolgerVan) {
+        this.opvolgerVan.add(opvolgerVan);
+        opvolgerVan.getOpvolgerVan().add(this); // Maintain the other side
+    }
+
+    public void removeOpvolgerVan(RegelingDTO opvolgerVan) {
+        this.opvolgerVan.remove(opvolgerVan);
+        opvolgerVan.getOpvolgerVan().remove(this); // Maintain the other side
+    }
 
 }
