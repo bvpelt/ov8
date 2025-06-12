@@ -1,8 +1,10 @@
 package com.bsoft.ov8.loader.exceptions;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+@Getter
 public class OzonApiException extends RuntimeException {
     private final HttpStatusCode statusCode;
     private final String errorDetails; // Or more specific objects like Problem/Problem400
@@ -26,11 +28,4 @@ public class OzonApiException extends RuntimeException {
         this.errorDetails = cause.getResponseBodyAsString();
     }
 
-    public HttpStatusCode getStatusCode() {
-        return statusCode;
-    }
-
-    public String getErrorDetails() {
-        return errorDetails;
-    }
 }

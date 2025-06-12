@@ -1,7 +1,7 @@
 create table regeling_opvolgervan
 (
-    id                  bigint                   not null primary key,
-    regeling_id     bigint,
+    id                  bigint not null primary key,
+    regeling_id         bigint,
     opvolgerregeling_id bigint
 );
 

@@ -150,7 +150,10 @@ public class OzonRegelingService {
         Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO;
         BevoegdGezagDTO savedBevoegdGezagDTO = null;
 
-        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
+                regelingDTO.getIdentificatie(),
+                regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
 
         if (optionalRegelingDTO.isEmpty()) {
             if (regelingDTO.getBevoegdGezag() != null) {
@@ -182,7 +185,10 @@ public class OzonRegelingService {
 
             regelingRepository.save(regelingDTO);
         } else {
-            log.info("Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists", regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+            log.info("Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists",
+                    regelingDTO.getIdentificatie(),
+                    regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                    regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
         }
     }
 

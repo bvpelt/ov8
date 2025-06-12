@@ -198,10 +198,15 @@ public class OzonRegelingenStreamService {
         Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO;
         BevoegdGezagDTO savedBevoegdGezagDTO = null;
 
-        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(regelingDTO.getIdentificatie(),
+                regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
 
         if (optionalRegelingDTO.isEmpty()) {
-            log.info("+++> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists", regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+            log.info("+++> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists",
+                    regelingDTO.getIdentificatie(),
+                    regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                    regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
             if (regelingDTO.getBevoegdGezag() != null) {
                 bevoegdGezagCode = regelingDTO.getBevoegdGezag().getCode();
                 optionalBevoegdGezagDTO = bevoegdGezagRepository.findByCode(bevoegdGezagCode);
@@ -231,7 +236,10 @@ public class OzonRegelingenStreamService {
 
             regelingRepository.save(regelingDTO);
         } else {
-            log.info("---> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists", regelingDTO.getIdentificatie(), regelingDTO.getTijdstipRegistratie(), regelingDTO.getBeginGeldigheid());
+            log.info("---> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists",
+                    regelingDTO.getIdentificatie(),
+                    regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                    regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
         }
     }
 }

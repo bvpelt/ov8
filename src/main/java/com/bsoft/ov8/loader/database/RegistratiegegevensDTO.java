@@ -1,49 +1,39 @@
 package com.bsoft.ov8.loader.database;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Data
-@Entity
-@Table(name = "registratiegegevens", schema = "public", catalog = "ov8")
+@Embeddable
 public class RegistratiegegevensDTO implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @Column(name = "id")
-    private BigDecimal id;
 
     @Column(name = "versie")
     private BigDecimal versie;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "beginInwerking")
+    @Column(name = "begininwerking")
     private LocalDate beginInwerking;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "beginGeldigheid")
+    @Column(name = "begingeldigheid")
     private LocalDate beginGeldigheid;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "eindGeldigheid")
+    @Column(name = "eindgeldigheid")
     private LocalDate eindGeldigheid;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "tijdstipRegistratie")
+    @Column(name = "tijdstipregistratie")
     private OffsetDateTime tijdstipRegistratie;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "eindRegistratie")
+    @Column(name = "eindregistratie")
     private OffsetDateTime eindRegistratie;
 }

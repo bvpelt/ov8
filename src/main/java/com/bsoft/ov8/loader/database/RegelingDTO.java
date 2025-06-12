@@ -4,13 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,35 +52,8 @@ public class RegelingDTO implements Serializable {
     @JoinColumn(name = "soortregeling_id") // Specifies the foreign key column name in the RegelingDTO table
     private SoortRegelingDTO type; // Singular, as each Regeling has one BG
 
-    //
-    // registratie gegevens
-    //
-    @Column(name = "versie")
-    private BigDecimal versie;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "begininwerking")
-    private LocalDate beginInwerking;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "begingeldigheid")
-    private LocalDate beginGeldigheid;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @Column(name = "eindgeldigheid")
-    private LocalDate eindGeldigheid;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "tijdstipregistratie")
-    private OffsetDateTime tijdstipRegistratie;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(name = "eindregistratie")
-    private OffsetDateTime eindRegistratie;
-
-    //
-    // einde registratie gegevens
-    //
+    @Embedded
+    private RegistratiegegevensDTO registratiegegevens;
 
     @Column(name = "citeertitel")
     private String citeerTitel;
@@ -123,6 +92,13 @@ public class RegelingDTO implements Serializable {
     @Column(name = "embedded")
     private RegelingAllOfEmbedded embedded;
      */
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "regeling_regelingsgebied", // This will be the name of your join table
+            joinColumns = @JoinColumn(name = "regeling_id"), // Column in the join table referring to THIS RegelingDTO
+            inverseJoinColumns = @JoinColumn(name = "locatie_id") // Column in the join table referring to the OTHER RegelingDTO (the one it succeeds)
+    )
+    private Set<LocatieDTO> regelingsgebied;
 
     // Helper methods to manage the relationship (optional but good practice)
     public void addOpvolgerVan(RegelingDTO opvolgerVan) {
@@ -133,6 +109,16 @@ public class RegelingDTO implements Serializable {
     public void removeOpvolgerVan(RegelingDTO opvolgerVan) {
         this.opvolgerVan.remove(opvolgerVan);
         opvolgerVan.getOpvolgerVan().remove(this); // Maintain the other side
+    }
+
+    public void addRegelingsgebied(LocatieDTO regelingsgebied) {
+        this.regelingsgebied.add(regelingsgebied);
+        regelingsgebied.getRegelingsgebieden().add(this); // Maintain the other side
+    }
+
+    public void removeRegelingsgebied(LocatieDTO regelingsgebied) {
+        this.regelingsgebied.remove(regelingsgebied);
+        regelingsgebied.getRegelingsgebieden().remove(this); // Maintain the other side
     }
 
 }

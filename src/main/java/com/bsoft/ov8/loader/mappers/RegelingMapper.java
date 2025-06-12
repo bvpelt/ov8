@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = {BevoegdGezagMapper.class, SoortRegelingMapper.class} // IMPORTANT: Tell MapStruct to use BevoegdGezagMapper
+        uses = {BevoegdGezagMapper.class, LocatieMapper.class, SoortRegelingMapper.class, UriMapper.class} // IMPORTANT: Tell MapStruct to use BevoegdGezagMapper
 )
 
 @Component
@@ -31,39 +31,22 @@ public abstract class RegelingMapper {
 
     // This method defines the mapping from Regeling to RegelingDTO
     @Mapping(source = "identificatie", target = "identificatie", qualifiedByName = "mapUriToString")
-    @Mapping(target = "officieleTitel", source = "officieleTitel")
+    @Mapping(source = "officieleTitel", target = "officieleTitel")
     @Mapping(source = "aangeleverdDoorEen", target = "bevoegdGezag")
     @Mapping(source = "type", target = "type")
-    @Mapping(source = "geregistreerdMet.versie", target = "versie")
-    @Mapping(source = "geregistreerdMet.beginInwerking", target = "beginInwerking")
-    @Mapping(source = "geregistreerdMet.beginGeldigheid", target = "beginGeldigheid")
-    @Mapping(source = "geregistreerdMet.eindGeldigheid", target = "eindGeldigheid")
-    @Mapping(source = "geregistreerdMet.tijdstipRegistratie", target = "tijdstipRegistratie")
-    @Mapping(source = "geregistreerdMet.eindRegistratie", target = "eindRegistratie")
-    @Mapping(target = "citeerTitel", source = "citeerTitel")
-    @Mapping(target = "opschrift", source = "opschrift")
-    @Mapping(target = "conditie", source = "conditie")
-    @Mapping(target = "opvolgerVan", source = "opvolgerVan", qualifiedByName = "mapOpvolgerVan")
+    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
+    @Mapping(source = "citeerTitel", target = "citeerTitel")
+    @Mapping(source = "opschrift", target = "opschrift")
+    @Mapping(source = "conditie", target = "conditie")
+    @Mapping(source = "opvolgerVan", target = "opvolgerVan", qualifiedByName = "mapOpvolgerVan")
+    @Mapping(source = "embedded.regelingsgebied", target = "regelingsgebied")
     // Custom mapping for recursion
-    @Mapping(target = "heeftBijlagen", source = "heeftBijlagen")
-    @Mapping(target = "heeftToelichtingen", source = "heeftToelichtingen")
-    @Mapping(target = "publicatieID", source = "publicatieID")
-    @Mapping(target = "inwerkingTot", source = "inwerkingTot")
-    @Mapping(target = "geldigTot", source = "geldigTot")
+    @Mapping(source = "heeftBijlagen", target = "heeftBijlagen")
+    @Mapping(source = "heeftToelichtingen", target = "heeftToelichtingen")
+    @Mapping(source = "publicatieID", target = "publicatieID")
+    @Mapping(source = "inwerkingTot", target = "inwerkingTot")
+    @Mapping(source = "geldigTot", target = "geldigTot")
     public abstract RegelingDTO toRegelingDTO(Regeling regeling);
-
-    // Custom mapping method for 'aangeleverdDoorEen' to a Set<BevoegdGezagDTO>
-    // URI to String converter
-    @Named("mapUriToString")
-    protected String mapUriToString(URI uri) {
-        return uri != null ? uri.toString() : null;
-    }
-
-    // String to URI converter (if mapping back from DTO to API model)
-    @Named("mapStringToUri")
-    protected URI mapStringToUri(String s) {
-        return s != null ? URI.create(s) : null;
-    }
 
     // --- Custom Mapping for opvolgerVan to handle recursion and entity lookup ---
     @Named("mapOpvolgerVan")
@@ -90,7 +73,7 @@ public abstract class RegelingMapper {
                     // Assuming 'identificatie' is unique and corresponds to RegelingDTO.identificatie
                     // It's good practice to convert URI to String here as your DTO stores it as String
                     RegelingDTO existingDto = //regelingRepository.findByIdentificatie(apiRegeling.getIdentificatie().toString())
-                            regelingRepository.findByIdentificatieAndTijdstipRegistratieAndBeginGeldigheid(apiRegeling.getIdentificatie().toString(),
+                            regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(apiRegeling.getIdentificatie().toString(),
                                             apiRegeling.getGeregistreerdMet().getTijdstipRegistratie(), apiRegeling.getGeregistreerdMet().getBeginGeldigheid())
                                     .orElse(null);
 
@@ -130,13 +113,9 @@ public abstract class RegelingMapper {
     @Mapping(target = "identificatie", source = "identificatie", qualifiedByName = "mapUriToString")
     @Mapping(target = "bevoegdGezag", source = "aangeleverdDoorEen")
     @Mapping(target = "type", source = "type")
+    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
     @Mapping(target = "opvolgerVan", source = "opvolgerVan", qualifiedByName = "mapOpvolgerVan") // Recursive call!
-    @Mapping(target = "versie", source = "geregistreerdMet.versie")
-    @Mapping(target = "beginInwerking", source = "geregistreerdMet.beginInwerking")
-    @Mapping(target = "beginGeldigheid", source = "geregistreerdMet.beginGeldigheid")
-    @Mapping(target = "eindGeldigheid", source = "geregistreerdMet.eindGeldigheid")
-    @Mapping(target = "tijdstipRegistratie", source = "geregistreerdMet.tijdstipRegistratie")
-    @Mapping(target = "eindRegistratie", source = "geregistreerdMet.eindRegistratie")
+//    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
     protected abstract void mapInternalRegelingToRegelingDTO(Regeling apiRegeling, @MappingTarget RegelingDTO target);
 
 
@@ -146,13 +125,9 @@ public abstract class RegelingMapper {
     @Mapping(target = "identificatie", source = "identificatie", qualifiedByName = "mapUriToString")
     @Mapping(target = "bevoegdGezag", source = "aangeleverdDoorEen")
     @Mapping(target = "type", source = "type")
+    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
     @Mapping(target = "opvolgerVan", source = "opvolgerVan", qualifiedByName = "mapOpvolgerVan")
-    @Mapping(target = "versie", source = "geregistreerdMet.versie")
-    @Mapping(target = "beginInwerking", source = "geregistreerdMet.beginInwerking")
-    @Mapping(target = "beginGeldigheid", source = "geregistreerdMet.beginGeldigheid")
-    @Mapping(target = "eindGeldigheid", source = "geregistreerdMet.eindGeldigheid")
-    @Mapping(target = "tijdstipRegistratie", source = "geregistreerdMet.tijdstipRegistratie")
-    @Mapping(target = "eindRegistratie", source = "geregistreerdMet.eindRegistratie")
+//    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
     public abstract void updateRegelingDTOFromApi(Regeling apiRegeling, @MappingTarget RegelingDTO target);
 
 }

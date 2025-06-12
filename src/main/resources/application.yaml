@@ -1,4 +1,3 @@
-
 logging:
   level:
     org:
@@ -44,7 +43,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        fomat_sql: true
+        format_sql: true
 info:
   project:
     name: ${spring.application.name}
