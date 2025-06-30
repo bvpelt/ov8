@@ -1,17 +1,17 @@
 package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.clients.OzonRegelingenClient;
-import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
-import com.bsoft.ov8.loader.database.RegelingDTO;
-import com.bsoft.ov8.loader.database.SoortRegelingDTO;
+import com.bsoft.ov8.loader.database.*;
+import com.bsoft.ov8.loader.mappers.BoundingBoxMapper;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
+import com.bsoft.ov8.loader.mappers.RegistratieGegevensMapper;
 import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
+import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
+import nl.overheid.omgevingswet.ozon.model.*;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
-import nl.overheid.omgevingswet.ozon.model.Regelingen;
-import nl.overheid.omgevingswet.ozon.model.RegelingenSort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,8 +22,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,26 +31,36 @@ public class OzonRegelingenStreamService {
 
     private final OzonRegelingenClient ozonRegelingenClient;
     private final WebClient webClient;
+    private final BoundingBoxMapper boundingBoxMapper;
     private final RegelingMapper regelingMapper;
+    private final RegistratieGegevensMapper registratieGegevensMapper;
     private final BevoegdGezagRepository bevoegdGezagRepository;
     private final RegelingRepository regelingRepository;
     private final SoortRegelingRepository soortRegelingRepository;
+    private final LocatieRepository locatieRepository;
+
     @Value("${api.ozon.base-url}")
     private String ozonBaseUrl;
 
     public OzonRegelingenStreamService(OzonRegelingenClient ozonRegelingenClient,
                                        WebClient webClient,
+                                       BoundingBoxMapper boundingBoxMapper,
                                        RegelingMapper regelingMapper,
+                                       RegistratieGegevensMapper registratieGegevensMapper,
                                        BevoegdGezagRepository bevoegdGezagRepository,
                                        RegelingRepository regelingRepository,
-                                       SoortRegelingRepository soortRegelingRepository
+                                       SoortRegelingRepository soortRegelingRepository,
+                                       LocatieRepository locatieRepository
     ) {
         this.ozonRegelingenClient = ozonRegelingenClient;
         this.webClient = webClient;
+        this.boundingBoxMapper = boundingBoxMapper;
         this.regelingMapper = regelingMapper;
+        this.registratieGegevensMapper = registratieGegevensMapper;
         this.bevoegdGezagRepository = bevoegdGezagRepository;
         this.regelingRepository = regelingRepository;
         this.soortRegelingRepository = soortRegelingRepository;
+        this.locatieRepository = locatieRepository;
     }
 
     /**
@@ -70,6 +79,7 @@ public class OzonRegelingenStreamService {
                                             LocalDate geldigOp,
                                             LocalDate inWerkingOp,
                                             OffsetDateTime beschikbaarOp,
+                                            Boolean _expand,
                                             String inwerkingTot,
                                             String geldigTot,
                                             Integer initialPage,
@@ -81,6 +91,7 @@ public class OzonRegelingenStreamService {
                 geldigOp,
                 inWerkingOp,
                 beschikbaarOp,
+                _expand,
                 inwerkingTot,
                 geldigTot,
                 initialPage,
@@ -126,6 +137,7 @@ public class OzonRegelingenStreamService {
             LocalDate geldigOp,
             LocalDate inWerkingOp,
             OffsetDateTime beschikbaarOp,
+            Boolean _expand,
             String inwerkingTot,
             String geldigTot,
             Integer page,
@@ -148,6 +160,7 @@ public class OzonRegelingenStreamService {
         Optional.ofNullable(geldigTot).ifPresent(val -> uriBuilder.queryParam("geldigTot", val));
         Optional.ofNullable(page).ifPresent(val -> uriBuilder.queryParam("page", val));
         Optional.ofNullable(size).ifPresent(val -> uriBuilder.queryParam("size", val));
+        Optional.ofNullable(_expand).ifPresent(val -> uriBuilder.queryParam("_expand", val));
 
         // Handle the 'sort' parameter, joining multiple if needed
         if (sort != null && !sort.isEmpty()) {
@@ -167,6 +180,7 @@ public class OzonRegelingenStreamService {
             LocalDate geldigOp,
             LocalDate inWerkingOp,
             OffsetDateTime beschikbaarOp,
+            Boolean _expand,
             String inwerkingTot,
             String geldigTot,
             Integer initialPage,
@@ -176,11 +190,11 @@ public class OzonRegelingenStreamService {
     ) {
         final long start = System.currentTimeMillis();
 
-        getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, inwerkingTot, geldigTot, initialPage, size, sort, fields)
+        getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, _expand, inwerkingTot, geldigTot, initialPage, size, sort, fields)
                 .doOnNext(regeling -> {
                     log.info("Processing regeling {}", regeling.getIdentificatie());
                     RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
-                    saveRegeling(regelingDTO);
+                    saveRegeling(regelingDTO, regeling);
                 })
                 .doOnError(e -> log.error("Error during processing individual Regeling: {}", e.getMessage()))
                 .doOnComplete(() -> {
@@ -192,51 +206,227 @@ public class OzonRegelingenStreamService {
 
     }
 
-    public void saveRegeling(RegelingDTO regelingDTO) {
+    @Transactional
+    public void saveRegeling(RegelingDTO regelingDTO, Regeling regeling) {
 
-        String bevoegdGezagCode;
-        Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO;
-        BevoegdGezagDTO savedBevoegdGezagDTO = null;
+        // --- Handle BevoegdGezagDTO and SoortRegelingDTO (similar logic as before) ---
+        if (regelingDTO.getBevoegdGezag() != null) {
+            Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO = bevoegdGezagRepository.findByCode(regelingDTO.getBevoegdGezag().getCode());
+            BevoegdGezagDTO managedBevoegdGezagDTO;
+            if (optionalBevoegdGezagDTO.isEmpty()) {
+                managedBevoegdGezagDTO = bevoegdGezagRepository.save(regelingDTO.getBevoegdGezag());
+            } else {
+                managedBevoegdGezagDTO = optionalBevoegdGezagDTO.get();
+            }
+            regelingDTO.setBevoegdGezag(managedBevoegdGezagDTO);
+        }
 
-        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(regelingDTO.getIdentificatie(),
+        if (regelingDTO.getType() != null) {
+            Optional<SoortRegelingDTO> optionalSoortRegelingDTO = soortRegelingRepository.findByCode(regelingDTO.getType().getCode());
+            SoortRegelingDTO managedSoortRegelingDTO;
+            if (optionalSoortRegelingDTO.isEmpty()) {
+                managedSoortRegelingDTO = soortRegelingRepository.save(regelingDTO.getType());
+            } else {
+                managedSoortRegelingDTO = optionalSoortRegelingDTO.get();
+            }
+            regelingDTO.setType(managedSoortRegelingDTO);
+        }
+
+        // Check if RegelingDTO already exists
+        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
+                regelingDTO.getIdentificatie(),
                 regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                 regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
 
         if (optionalRegelingDTO.isEmpty()) {
-            log.info("+++> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists",
+            log.info("+++> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists. Saving new Regeling.",
                     regelingDTO.getIdentificatie(),
                     regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                     regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
-            if (regelingDTO.getBevoegdGezag() != null) {
-                bevoegdGezagCode = regelingDTO.getBevoegdGezag().getCode();
-                optionalBevoegdGezagDTO = bevoegdGezagRepository.findByCode(bevoegdGezagCode);
-
-                if (!optionalBevoegdGezagDTO.isPresent()) {
-                    savedBevoegdGezagDTO = bevoegdGezagRepository.save(regelingDTO.getBevoegdGezag());
-                } else {
-                    savedBevoegdGezagDTO = optionalBevoegdGezagDTO.get();
-                }
-                regelingDTO.setBevoegdGezag(savedBevoegdGezagDTO);
-            }
-
-            String soortRegelingCode;
-            Optional<SoortRegelingDTO> optionalSoortRegelingDTO;
-            SoortRegelingDTO savedSoortRegelingDTO = null;
-            if (regelingDTO.getType() != null) {
-                soortRegelingCode = regelingDTO.getType().getCode();
-                optionalSoortRegelingDTO = soortRegelingRepository.findByCode(soortRegelingCode);
-
-                if (!optionalSoortRegelingDTO.isPresent()) {
-                    savedSoortRegelingDTO = soortRegelingRepository.save(regelingDTO.getType());
-                } else {
-                    savedSoortRegelingDTO = optionalSoortRegelingDTO.get();
-                }
-                regelingDTO.setType(savedSoortRegelingDTO);
-            }
 
             regelingRepository.save(regelingDTO);
+
+            //
+            // --- Prepare RelatieDTO's for Many-to-Many relationship opvolgervan ---
+            Set<RegelingDTO> managedOpvolgerForRegeling = new HashSet<>();
+
+            if (regeling.getOpvolgerVan() != null && !regeling.getOpvolgerVan().isEmpty()) {
+                // Iterate over the Regeling mapped from the API response
+                for (Regeling currentOpvolgerInRegeling : regeling.getOpvolgerVan()) {
+                    Optional<RegelingDTO> optionalOpvolgerVanDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(currentOpvolgerInRegeling.getIdentificatie().toString(),
+                            currentOpvolgerInRegeling.getGeregistreerdMet().getTijdstipRegistratie(),
+                            currentOpvolgerInRegeling.getGeregistreerdMet().getBeginGeldigheid());
+
+                    RegelingDTO managedOpvolgerVanDTO;
+                    if (optionalOpvolgerVanDTO.isPresent()) {
+                        // If LocatieDTO already exists, use the one from the database directly.
+                        // It is already a managed entity within this transaction.
+                        managedOpvolgerVanDTO = optionalOpvolgerVanDTO.get();
+                    } else {
+                        // If RegelingDTO does not exist, save the new one to make it managed.
+                        RegelingDTO opvolgerDTO = regelingMapper.toRegelingDTO(currentOpvolgerInRegeling);
+                        managedOpvolgerVanDTO = regelingRepository.save(opvolgerDTO);
+                    }
+                    managedOpvolgerForRegeling.add(managedOpvolgerVanDTO);
+                }
+            }
+            // Set the collection of managed RelatieDTO on the RegelingDTO (the owning side)
+            regelingDTO.setOpvolgerVan(managedOpvolgerForRegeling);
+
+
+            // --- Prepare LocatieDTOs for Many-to-Many relationship regelingsgebied ---
+            Set<LocatieDTO> managedLocatiesForRegeling = new HashSet<>();
+            RegelingAllOfEmbedded regelingAllOfEmbedded = regeling.getEmbedded();
+            if (regelingAllOfEmbedded != null) {
+                EmbeddedLocatie embeddedLocatie = regelingAllOfEmbedded.getRegelingsgebied();
+                if (embeddedLocatie != null) {
+                    LocatieDTO locatieDTO = new LocatieDTO();
+                    locatieDTO.setIdentificatie(embeddedLocatie.getIdentificatie().toString());
+                    locatieDTO.setGeometrieIdentificatie(embeddedLocatie.getGeometrieIdentificatie());
+                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                            locatieDTO.getIdentificatie(),
+                            locatieDTO.getGeometrieIdentificatie());
+
+                    LocatieDTO managedLocatieDTO;
+                    if (optionalLocatieDTO.isPresent()) {
+                        // If LocatieDTO already exists, use the one from the database directly.
+                        // It is already a managed entity within this transaction.
+                        managedLocatieDTO = optionalLocatieDTO.get();
+                        //managedLocatieDTO.addRegeling(regelingDTO);
+                    } else {
+                        // If LocatieDTO does not exist, save the new one to make it managed.
+                        locatieDTO.setLocatieType(embeddedLocatie.getLocatieType());
+                        locatieDTO.setNoemer(embeddedLocatie.getNoemer());
+
+                        BoundingBoxDTO boundingBoxDTO = boundingBoxMapper.toBoundingBoxDTO(embeddedLocatie.getBoundingBox());
+                        locatieDTO.setBoundingBox(boundingBoxDTO);
+
+                        RegistratiegegevensDTO registratiegegevensDTO = registratieGegevensMapper.toRegistratiegegevensDTO(embeddedLocatie.getGeregistreerdMet());
+
+                        locatieDTO.setRegistratiegegevens(registratiegegevensDTO);
+
+                        locatieDTO.setRegelingsgebieden(new HashSet<>());
+
+                        managedLocatieDTO = locatieRepository.save(locatieDTO);
+                        //managedLocatieDTO.addRegeling(regelingDTO);
+                    }
+                    managedLocatiesForRegeling.add(managedLocatieDTO);
+                }
+
+            }
+            regelingDTO.setRegelingsgebied(managedLocatiesForRegeling);
+
+            /*
+            if (regelingDTO.getRegelingsgebied() != null && !regelingDTO.getRegelingsgebied().isEmpty()) {
+                // Iterate over the LocatieDTOs mapped from the API response
+                for (LocatieDTO currentLocatieInRegeling : regelingDTO.getRegelingsgebied()) {
+                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                            currentLocatieInRegeling.getIdentificatie(),
+                            currentLocatieInRegeling.getGeometrieIdentificatie());
+
+                    LocatieDTO managedLocatieDTO;
+                    if (optionalLocatieDTO.isPresent()) {
+                        // If LocatieDTO already exists, use the one from the database directly.
+                        // It is already a managed entity within this transaction.
+                        managedLocatieDTO = optionalLocatieDTO.get();
+                    } else {
+                        // If LocatieDTO does not exist, save the new one to make it managed.
+                        managedLocatieDTO = locatieRepository.save(currentLocatieInRegeling);
+                    }
+                    managedLocatiesForRegeling.add(managedLocatieDTO);
+                }
+            }
+
+
+
+            // Set the collection of managed LocatieDTOs on the RegelingDTO (the owning side)
+            regelingDTO.setRegelingsgebied(managedLocatiesForRegeling);
+ */
+            // --- Save the RegelingDTO ---
+            // Hibernate will now correctly manage the many-to-many relationship
+            // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
+            regelingRepository.save(regelingDTO);
+
         } else {
-            log.info("---> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists",
+            log.info("---> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists. Skipping save for now. <---",
+                    regelingDTO.getIdentificatie(),
+                    regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                    regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
+        }
+    }
+
+
+
+    @Transactional
+    public void saveRegelingorg(RegelingDTO regelingDTO) {
+
+        // --- Handle BevoegdGezagDTO ---
+        if (regelingDTO.getBevoegdGezag() != null) {
+            Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO = bevoegdGezagRepository.findByCode(regelingDTO.getBevoegdGezag().getCode());
+            BevoegdGezagDTO managedBevoegdGezagDTO;
+            if (optionalBevoegdGezagDTO.isEmpty()) {
+                managedBevoegdGezagDTO = bevoegdGezagRepository.save(regelingDTO.getBevoegdGezag());
+            } else {
+                managedBevoegdGezagDTO = optionalBevoegdGezagDTO.get();
+            }
+            regelingDTO.setBevoegdGezag(managedBevoegdGezagDTO);
+        }
+
+        // --- Handle SoortRegelingDTO ---
+        if (regelingDTO.getType() != null) {
+            Optional<SoortRegelingDTO> optionalSoortRegelingDTO = soortRegelingRepository.findByCode(regelingDTO.getType().getCode());
+            SoortRegelingDTO managedSoortRegelingDTO;
+            if (optionalSoortRegelingDTO.isEmpty()) {
+                managedSoortRegelingDTO = soortRegelingRepository.save(regelingDTO.getType());
+            } else {
+                managedSoortRegelingDTO = optionalSoortRegelingDTO.get();
+            }
+            regelingDTO.setType(managedSoortRegelingDTO);
+        }
+
+        // Check if RegelingDTO already exists
+        Optional<RegelingDTO> optionalRegelingDTO = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
+                regelingDTO.getIdentificatie(),
+                regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
+
+        if (optionalRegelingDTO.isEmpty()) {
+            log.info("+++> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists. Saving new Regeling.",
+                    regelingDTO.getIdentificatie(),
+                    regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
+                    regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
+
+            // --- Prepare LocatieDTOs for Many-to-Many relationship ---
+            Set<LocatieDTO> managedLocatiesForRegeling = new HashSet<>();
+            if (regelingDTO.getRegelingsgebied() != null && !regelingDTO.getRegelingsgebied().isEmpty()) {
+                // Iterate over the LocatieDTOs mapped from the API response
+                for (LocatieDTO currentLocatieInRegeling : regelingDTO.getRegelingsgebied()) {
+                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                            currentLocatieInRegeling.getIdentificatie(),
+                            currentLocatieInRegeling.getGeometrieIdentificatie());
+
+                    LocatieDTO managedLocatieDTO;
+                    if (optionalLocatieDTO.isPresent()) {
+                        // If LocatieDTO already exists, use the one from the database directly.
+                        // It is already a managed entity within this transaction.
+                        managedLocatieDTO = optionalLocatieDTO.get();
+                    } else {
+                        // If LocatieDTO does not exist, save the new one to make it managed.
+                        managedLocatieDTO = locatieRepository.save(currentLocatieInRegeling);
+                    }
+                    managedLocatiesForRegeling.add(managedLocatieDTO);
+                }
+            }
+            // Set the collection of managed LocatieDTOs on the RegelingDTO (the owning side)
+            regelingDTO.setRegelingsgebied(managedLocatiesForRegeling);
+
+            // --- Save the RegelingDTO ---
+            // Hibernate will now correctly manage the many-to-many relationship
+            // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
+            regelingRepository.save(regelingDTO);
+
+        } else {
+            log.info("---> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists. Skipping save.",
                     regelingDTO.getIdentificatie(),
                     regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                     regelingDTO.getRegistratiegegevens().getBeginGeldigheid());

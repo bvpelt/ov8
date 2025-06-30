@@ -92,7 +92,7 @@ public class RegelingDTO implements Serializable {
     @Column(name = "embedded")
     private RegelingAllOfEmbedded embedded;
      */
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}) // Or CascadeType.ALL for broader cascading
     @JoinTable(
             name = "regeling_regelingsgebied", // This will be the name of your join table
             joinColumns = @JoinColumn(name = "regeling_id"), // Column in the join table referring to THIS RegelingDTO
@@ -110,7 +110,7 @@ public class RegelingDTO implements Serializable {
         this.opvolgerVan.remove(opvolgerVan);
         opvolgerVan.getOpvolgerVan().remove(this); // Maintain the other side
     }
-
+/*
     public void addRegelingsgebied(LocatieDTO regelingsgebied) {
         this.regelingsgebied.add(regelingsgebied);
         regelingsgebied.getRegelingsgebieden().add(this); // Maintain the other side
@@ -119,6 +119,19 @@ public class RegelingDTO implements Serializable {
     public void removeRegelingsgebied(LocatieDTO regelingsgebied) {
         this.regelingsgebied.remove(regelingsgebied);
         regelingsgebied.getRegelingsgebieden().remove(this); // Maintain the other side
+    }
+*/
+    // Helper method to maintain bidirectional relationship if needed, though often not strictly necessary for saving
+    public void addLocatie(LocatieDTO locatie) {
+        this.regelingsgebied.add(locatie);
+        // If LocatieDTO also has a many-to-many back to RegelingDTO (inverse side),
+        // you'd add: locatie.getRegelingen().add(this);
+        // However, avoid this if RegelingDTO is truly the *owning* side for simplicity in saving.
+    }
+
+    public void removeLocatie(LocatieDTO locatie) {
+        this.regelingsgebied.remove(locatie);
+        // If LocatieDTO has inverse: locatie.getRegelingen().remove(this);
     }
 
 }

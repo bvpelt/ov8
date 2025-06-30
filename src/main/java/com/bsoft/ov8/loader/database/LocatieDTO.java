@@ -3,6 +3,7 @@ package com.bsoft.ov8.loader.database;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import nl.overheid.omgevingswet.ozon.model.LocatieType;
 
 import java.io.Serial;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = {"identificatie", "geometrieIdentificatie"})
+@ToString(exclude = {"regelingsgebieden"})
 @Entity
 @Table(name = "locatie", schema = "public", catalog = "ov8")
 public class LocatieDTO implements Serializable {
@@ -43,7 +45,7 @@ public class LocatieDTO implements Serializable {
     private RegistratiegegevensDTO registratiegegevens;
 
     // This is the inverse side of the Many-to-Many relationship
-    @ManyToMany(mappedBy = "regelingsgebied", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "regelingsgebied") //, fetch = FetchType.LAZY)
     private Set<RegelingDTO> regelingsgebieden = new HashSet<>(); // Naming convention `regelingsgebieds` for the collection
 
     // Helper methods for managing the relationship (optional but good practice)

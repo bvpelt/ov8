@@ -9,14 +9,15 @@ create table locatie
     miny                   bigint,
     maxx                   bigint,
     maxy                   bigint,
+    versie                 NUMERIC,
     begininwerking         DATE                     not null,
     begingeldigheid        DATE                     not null,
     eindgeldigheid         DATE,
     tijdstipregistratie    TIMESTAMP WITH TIME ZONE not null,
-    eindregistratie        TIMESTAMP WITH TIME ZONE,
+    eindregistratie        TIMESTAMP WITH TIME ZONE
 );
 
-create unique index identificatie_geometrieidentificatie on regeling_opvolgervan (identificatie, geometrieidentificatie);
+create unique index identificatie_geometrieidentificatie on locatie (identificatie, geometrieidentificatie);
 
 ALTER TABLE locatie
 ALTER
