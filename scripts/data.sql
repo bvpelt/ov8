@@ -1,0 +1,25 @@
+
+--- subset van regeling met soortregeling, bevoegdgezag en locatie
+select r.identificatie, r.tijdstipregistratie, r.eindregistratie, r.begingeldigheid, r.eindgeldigheid, r.begininwerking, s.waarde, b.naam, l.noemer, l.identificatie, l.geometrieidentificatie
+from regeling r, soortregeling s, bevoegdgezag b, locatie l, regeling_regelingsgebied rr
+where r.soortregeling_id = s.id and b.id = r.bevoegdgezag_id and r.id = rr.regeling_id and l.id=rr.locatie_id
+limit 5;
+
+--- locatie gegevens
+select identificatie, geometrieidentificatie, locatietype, noemer
+from locatie;
+
+
+--- subset van regeling met soortregeling, bevoegdgezag en locatie
+    select r.identificatie, r.versie, r.tijdstipregistratie, r.begingeldigheid, s.waarde, b.code, l.identificatie
+    from regeling r, soortregeling s, bevoegdgezag b, locatie l, regeling_regelingsgebied rr
+    where
+        r.soortregeling_id = s.id and
+        b.id = r.bevoegdgezag_id and
+        r.id = rr.regeling_id and
+        l.id=rr.locatie_id and
+        r.versie > 1 and
+        s.code = '/join/id/stop/regelingtype_003' --- Omgevingsplan
+    ;
+
+

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +21,9 @@ public interface RegelingRepository extends PagingAndSortingRepository<RegelingD
             value =
                     "SELECT * FROM regeling WHERE identificatie = :identificatie and tijdstipregistratie=:tijdstipRegistratie and begingeldigheid = :beginGeldigheid", nativeQuery = true)
     Optional<RegelingDTO> findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(String identificatie, OffsetDateTime tijdstipRegistratie, LocalDate beginGeldigheid);
+
+    @Query(
+            value =
+                    "SELECT * FROM regeling WHERE versie > :version order by identification", nativeQuery = true)
+    List<RegelingDTO> findByVersieGreaterThan(Integer version);
 }
