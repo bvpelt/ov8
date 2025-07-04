@@ -314,23 +314,35 @@ public class OzonRegelingenStreamService {
                         List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
                         log.info("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
                         omvat.forEach(gebied -> {
-                            LocatieDTO omvatDTO = new LocatieDTO();
-                            omvatDTO.setLocatieType(gebied.getLocatieType());
-                            omvatDTO.setNoemer(gebied.getNoemer());
 
-                            BoundingBoxDTO boundingBoxOmvatDTO = boundingBoxMapper.toBoundingBoxDTO(gebied.getBoundingBox());
-                            omvatDTO.setBoundingBox(boundingBoxOmvatDTO);
+                            Optional<LocatieDTO> optionalGebiedDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                                    gebied.getIdentificatie().toString(),
+                                    gebied.getGeometrieIdentificatie());
 
-                            RegistratiegegevensDTO registratiegegevensOmvatDTO = registratieGegevensMapper.toRegistratiegegevensDTO(gebied.getGeregistreerdMet());
+                            if (optionalGebiedDTO.isPresent()) {
+                                LocatieDTO foundGebiedDTO = optionalGebiedDTO.get();
+                                managedLocatieDTO.addMember(foundGebiedDTO);
+                            } else {
+                                LocatieDTO gebiedDTO = new LocatieDTO();
+                                gebiedDTO.setIdentificatie(gebied.getIdentificatie().toString());
+                                gebiedDTO.setGeometrieIdentificatie(gebied.getGeometrieIdentificatie());
+                                gebiedDTO.setLocatieType(gebied.getLocatieType());
+                                gebiedDTO.setNoemer(gebied.getNoemer());
 
-                            omvatDTO.setRegistratiegegevens(registratiegegevensOmvatDTO);
+                                BoundingBoxDTO boundingBoxOmvatDTO = boundingBoxMapper.toBoundingBoxDTO(gebied.getBoundingBox());
+                                gebiedDTO.setBoundingBox(boundingBoxOmvatDTO);
 
-                            omvatDTO.setRegelingsgebieden(new HashSet<>());
+                                RegistratiegegevensDTO registratiegegevensOmvatDTO = registratieGegevensMapper.toRegistratiegegevensDTO(gebied.getGeregistreerdMet());
 
-                            LocatieDTO managedOmvatDTO = locatieRepository.save(omvatDTO);
-                            log.info("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
+                                gebiedDTO.setRegistratiegegevens(registratiegegevensOmvatDTO);
 
-                            managedLocatieDTO.addMember(managedOmvatDTO);
+                                gebiedDTO.setRegelingsgebieden(new HashSet<>());
+
+                                LocatieDTO managedOmvatDTO = locatieRepository.save(gebiedDTO);
+                                log.info("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
+
+                                managedLocatieDTO.addMember(managedOmvatDTO);
+                            }
                         });
 
                         locatieRepository.save(managedLocatieDTO);
