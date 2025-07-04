@@ -310,8 +310,9 @@ public class OzonRegelingenStreamService {
                     Set<LocatieDTO> managedEmbeddedLocatieDTO = new HashSet<>();
                     //
                     // Een gebiedengroep omvat 1..n locaties
-                    if (embeddedLocatie.getLocatieType().getValue().equals("GEBIEDENGROEP")) {
+                    if (locatieDTO.getLocatieType().getValue().equals("Gebiedengroep")) {
                         List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
+                        log.info("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
                         omvat.forEach(gebied -> {
                             LocatieDTO omvatDTO = new LocatieDTO();
                             omvatDTO.setLocatieType(gebied.getLocatieType());
@@ -326,10 +327,13 @@ public class OzonRegelingenStreamService {
 
                             omvatDTO.setRegelingsgebieden(new HashSet<>());
 
-                            managedEmbeddedLocatieDTO.add(locatieRepository.save(omvatDTO));
+                            LocatieDTO managedOmvatDTO = locatieRepository.save(omvatDTO);
+                            log.info("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
+
+                            managedLocatieDTO.addMember(managedOmvatDTO);
                         });
 
-                        managedLocatieDTO.setRelatieGebiedenGroep-Omvat()
+                        locatieRepository.save(managedLocatieDTO);
                     }
                 }
                 managedLocatiesForRegeling.add(managedLocatieDTO);

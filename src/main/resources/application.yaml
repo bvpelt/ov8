@@ -17,6 +17,19 @@ logging:
         http:
           client: DEBUG
           HttpClient: DEBUG
+  # --- Logging to File Configuration ---
+  file:
+    name: logs/application.log # Specifies the full path and name of the log file.
+    # 'logs/' indicates a 'logs' directory relative to your application's JAR.
+
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{30} - %msg%n" # Custom pattern for file output
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{30} - %msg%n" # Keep your console pattern if desired
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+      total-size-cap: 1GB
 
 spring:
   application:

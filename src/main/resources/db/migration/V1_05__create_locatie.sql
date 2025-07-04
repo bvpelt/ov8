@@ -14,10 +14,12 @@ create table locatie
     begingeldigheid        DATE                     not null,
     eindgeldigheid         DATE,
     tijdstipregistratie    TIMESTAMP WITH TIME ZONE not null,
-    eindregistratie        TIMESTAMP WITH TIME ZONE
+    eindregistratie        TIMESTAMP WITH TIME ZONE,
+    parent_group_id        bigint
 );
 
-create unique index identificatie_geometrieidentificatie on locatie (identificatie, geometrieidentificatie);
+create unique index locatie_geometrieidentificatie on locatie (identificatie, geometrieidentificatie);
+create unique index locatie_parent_group on locatie (parent_group_id, id);
 
 ALTER TABLE locatie
 ALTER
