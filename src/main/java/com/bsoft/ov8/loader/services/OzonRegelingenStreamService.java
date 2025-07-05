@@ -1,8 +1,12 @@
 package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.clients.OzonRegelingenClient;
-import com.bsoft.ov8.loader.database.*;
+import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
+import com.bsoft.ov8.loader.database.LocatieDTO;
+import com.bsoft.ov8.loader.database.RegelingDTO;
+import com.bsoft.ov8.loader.database.SoortRegelingDTO;
 import com.bsoft.ov8.loader.mappers.BoundingBoxMapper;
+import com.bsoft.ov8.loader.mappers.LocatieMapper;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.mappers.RegistratieGegevensMapper;
 import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
@@ -35,6 +39,7 @@ public class OzonRegelingenStreamService {
     private final OzonRegelingenClient ozonRegelingenClient;
     private final WebClient webClient;
     private final BoundingBoxMapper boundingBoxMapper;
+    private final LocatieMapper locatieMapper;
     private final RegelingMapper regelingMapper;
     private final RegistratieGegevensMapper registratieGegevensMapper;
     private final BevoegdGezagRepository bevoegdGezagRepository;
@@ -48,6 +53,7 @@ public class OzonRegelingenStreamService {
     public OzonRegelingenStreamService(OzonRegelingenClient ozonRegelingenClient,
                                        WebClient webClient,
                                        BoundingBoxMapper boundingBoxMapper,
+                                       LocatieMapper locatieMapper,
                                        RegelingMapper regelingMapper,
                                        RegistratieGegevensMapper registratieGegevensMapper,
                                        BevoegdGezagRepository bevoegdGezagRepository,
@@ -58,6 +64,7 @@ public class OzonRegelingenStreamService {
         this.ozonRegelingenClient = ozonRegelingenClient;
         this.webClient = webClient;
         this.boundingBoxMapper = boundingBoxMapper;
+        this.locatieMapper = locatieMapper;
         this.regelingMapper = regelingMapper;
         this.registratieGegevensMapper = registratieGegevensMapper;
         this.bevoegdGezagRepository = bevoegdGezagRepository;
@@ -194,13 +201,13 @@ public class OzonRegelingenStreamService {
 
         getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, _expand, inwerkingTot, geldigTot, initialPage, size, sort, fields)
                 .doOnNext(regeling -> {
-                    log.info("Processing regeling {}", regeling.getIdentificatie());
+                    log.debug("Processing regeling {}", regeling.getIdentificatie());
                     RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
                     saveRegeling(regelingDTO, regeling);
                 })
                 .doOnError(e -> log.error("Error during processing individual Regeling: {}", e.getMessage()))
                 .doOnComplete(() -> {
-                    log.info("All regelingen processing complete");
+                    log.debug("All regelingen processing complete");
                     log.info("Duration: " + (System.currentTimeMillis() - start));
                 })
                 .subscribe();
@@ -208,7 +215,7 @@ public class OzonRegelingenStreamService {
 
     @Transactional
     public void saveRegeling(RegelingDTO regelingDTO, Regeling regeling) {
-        log.info("===> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {}.",
+        log.debug("===> Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {}.",
                 regelingDTO.getIdentificatie(),
                 regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                 regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
@@ -222,7 +229,7 @@ public class OzonRegelingenStreamService {
                 regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
 
         if (optionalRegelingDTO.isEmpty()) {
-            log.info("+++> New Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists. Saving regeling.",
+            log.debug("+++> New Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} not exists. Saving regeling.",
                     regelingDTO.getIdentificatie(),
                     regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                     regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
@@ -236,7 +243,7 @@ public class OzonRegelingenStreamService {
             // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
             regelingRepository.save(regelingDTO);
         } else {
-            log.info("---> Existing Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists. Skipping save for now. <---",
+            log.debug("---> Existing Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists. Skipping save for now. <---",
                     regelingDTO.getIdentificatie(),
                     regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                     regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
@@ -295,8 +302,7 @@ public class OzonRegelingenStreamService {
                     // It is already a managed entity within this transaction.
                     managedLocatieDTO = optionalLocatieDTO.get();
                 } else { // If LocatieDTO does not exist, save the new one to make it managed.
-                    LocatieDTO locatieDTO = new LocatieDTO();
-                    fillLocatieDTO(locatieDTO, embeddedLocatie);
+                    LocatieDTO locatieDTO = locatieMapper.toLocatieDTO(embeddedLocatie);
 
                     managedLocatieDTO = locatieRepository.save(locatieDTO);
 
@@ -305,7 +311,7 @@ public class OzonRegelingenStreamService {
                     // Een gebiedengroep omvat 1..n locaties
                     if (locatieDTO.getLocatieType().getValue().equals("Gebiedengroep")) {
                         List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
-                        log.info("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
+                        log.debug("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
                         omvat.forEach(gebied -> {
 
                             Optional<LocatieDTO> optionalGebiedDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
@@ -316,11 +322,10 @@ public class OzonRegelingenStreamService {
                                 LocatieDTO foundGebiedDTO = optionalGebiedDTO.get();
                                 managedLocatieDTO.addMember(foundGebiedDTO);
                             } else {
-                                LocatieDTO gebiedDTO = new LocatieDTO();
-                                fillLocatieDTO(gebiedDTO, gebied);
+                                LocatieDTO gebiedDTO = locatieMapper.toLocatieDTO(gebied);
 
                                 LocatieDTO managedOmvatDTO = locatieRepository.save(gebiedDTO);
-                                log.info("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
+                                log.debug("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
 
                                 managedLocatieDTO.addMember(managedOmvatDTO);
                             }
@@ -332,18 +337,6 @@ public class OzonRegelingenStreamService {
             }
         }
         return managedLocatiesForRegeling;
-    }
-
-    private void fillLocatieDTO(LocatieDTO locatieDTO, EmbeddedLocatie embeddedLocatie) {
-        locatieDTO.setIdentificatie(embeddedLocatie.getIdentificatie().toString());
-        locatieDTO.setGeometrieIdentificatie(embeddedLocatie.getGeometrieIdentificatie());
-        locatieDTO.setLocatieType(embeddedLocatie.getLocatieType());
-        locatieDTO.setNoemer(embeddedLocatie.getNoemer());
-        BoundingBoxDTO boundingBoxDTO = boundingBoxMapper.toBoundingBoxDTO(embeddedLocatie.getBoundingBox());
-        locatieDTO.setBoundingBox(boundingBoxDTO);
-        RegistratiegegevensDTO registratiegegevensDTO = registratieGegevensMapper.toRegistratiegegevensDTO(embeddedLocatie.getGeregistreerdMet());
-        locatieDTO.setRegistratiegegevens(registratiegegevensDTO);
-        locatieDTO.setRegelingsgebieden(new HashSet<>());
     }
 
     private void oneToMany(RegelingDTO regelingDTO) {

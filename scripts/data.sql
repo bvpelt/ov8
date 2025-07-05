@@ -23,6 +23,7 @@ from locatie;
     ;
 
 select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+select sum(aantal) from (select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id);
 
 select count(*) as aantal, locatietype from locatie group by locatietype order by locatietype;
 select id, identificatie, parent_group_id, minx, miny, maxx, maxy from locatie where parent_group_id in (select id from locatie where locatietype = 'GEBIEDENGROEP') order by parent_group_id;
