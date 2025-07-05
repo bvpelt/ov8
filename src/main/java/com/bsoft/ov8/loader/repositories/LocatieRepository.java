@@ -1,6 +1,5 @@
 package com.bsoft.ov8.loader.repositories;
 
-import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
 import com.bsoft.ov8.loader.database.LocatieDTO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
@@ -14,5 +13,5 @@ public interface LocatieRepository extends PagingAndSortingRepository<LocatieDTO
         CrudRepository<LocatieDTO, Long>,
         JpaSpecificationExecutor<LocatieDTO> {
 
-    Optional<LocatieDTO> findByIdentificatieAndGeometrieIdentificatie(String identificatie, String geometrieidentificatie );
+    Optional<LocatieDTO> findByIdentificatieAndGeometrieIdentificatie(String identificatie, String geometrieidentificatie);
 }

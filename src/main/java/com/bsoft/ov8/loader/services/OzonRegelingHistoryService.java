@@ -9,8 +9,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -75,7 +73,7 @@ public class OzonRegelingHistoryService {
      * Makes a reactive API call to retrieve a specific version of a RegelingDTO.
      * Assumes an API endpoint like /api/regelingen/{identificatie}/versions?version={versionNumber}
      *
-     * @param identificatie The unique identifier of the regeling.
+     * @param identificatie  The unique identifier of the regeling.
      * @param versionToFetch The specific version number to retrieve.
      * @return A Mono that emits the specific RegelingDTO version, or an empty Mono if not found/error.
      */

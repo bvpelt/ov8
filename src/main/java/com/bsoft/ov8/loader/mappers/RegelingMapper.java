@@ -22,13 +22,12 @@ import java.util.stream.Collectors;
 @Component
 public abstract class RegelingMapper {
 
-    @Autowired
-    private RegelingRepository regelingRepository; //
-
     // Used to break recursion by keeping track of mapped entities during a single mapping operation
     // This map ensures that if RegelingA points to RegelingB, and RegelingB points back to RegelingA,
     // we don't end up in an infinite loop.
     private final ThreadLocal<java.util.Map<URI, RegelingDTO>> context = ThreadLocal.withInitial(java.util.HashMap::new);
+    @Autowired
+    private RegelingRepository regelingRepository; //
 
     // This method defines the mapping from Regeling to RegelingDTO
     @Mapping(source = "identificatie", target = "identificatie", qualifiedByName = "mapUriToString")

@@ -2,21 +2,19 @@ package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.LocatieDTO;
 import nl.overheid.omgevingswet.ozon.model.EmbeddedLocatie;
-// Removed: import nl.overheid.omgevingswet.ozon.model.Locatie; // If not used
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
-// Removed: import java.net.URI; // If not used directly here
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Mapper(componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = {UriMapper.class} )
+        uses = {UriMapper.class})
 
 @Component
 public abstract class LocatieMapper {

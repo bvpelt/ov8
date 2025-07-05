@@ -9,11 +9,11 @@ import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
 import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
-import nl.overheid.omgevingswet.ozon.model.*;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import nl.overheid.omgevingswet.ozon.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
@@ -22,7 +22,10 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -129,7 +132,6 @@ public class OzonRegelingenStreamService {
                 .doOnError(e -> System.err.println("Error fetching page " + uri + ": " + e.getMessage()));
     }
 
-
     /**
      * Helper method to build the initial URI with query parameters.
      */
@@ -233,7 +235,6 @@ public class OzonRegelingenStreamService {
             // Hibernate will now correctly manage the many-to-many relationship
             // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
             regelingRepository.save(regelingDTO);
-
         } else {
             log.info("---> Existing Regeling identificatie {} tijdstipRegistratie: {}, beginGeldigheid: {} exists. Skipping save for now. <---",
                     regelingDTO.getIdentificatie(),
@@ -274,41 +275,33 @@ public class OzonRegelingenStreamService {
         regelingDTO.setOpvolgerVan(managedOpvolgerForRegeling);
 
         // --- Prepare LocatieDTOs for Many-to-Many relationship regelingsgebied ---
+        Set<LocatieDTO> managedLocatiesForRegeling = getLocatieDTOS(regelingDTO, regeling);
+        regelingDTO.setRegelingsgebied(managedLocatiesForRegeling);
+    }
+
+    private Set<LocatieDTO> getLocatieDTOS(RegelingDTO regelingDTO, Regeling regeling) {
         Set<LocatieDTO> managedLocatiesForRegeling = new HashSet<>();
         RegelingAllOfEmbedded regelingAllOfEmbedded = regeling.getEmbedded();
         if (regelingAllOfEmbedded != null) {
             EmbeddedLocatie embeddedLocatie = regelingAllOfEmbedded.getRegelingsgebied();
             if (embeddedLocatie != null) {
-                LocatieDTO locatieDTO = new LocatieDTO();
-                locatieDTO.setIdentificatie(embeddedLocatie.getIdentificatie().toString());
-                locatieDTO.setGeometrieIdentificatie(embeddedLocatie.getGeometrieIdentificatie());
+
                 Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
-                        locatieDTO.getIdentificatie(),
-                        locatieDTO.getGeometrieIdentificatie());
+                        embeddedLocatie.getIdentificatie().toString(),
+                        embeddedLocatie.getGeometrieIdentificatie());
 
                 LocatieDTO managedLocatieDTO;
-                if (optionalLocatieDTO.isPresent()) {
-                    // If LocatieDTO already exists, use the one from the database directly.
+                if (optionalLocatieDTO.isPresent()) { // If LocatieDTO already exists, use the one from the database directly.
                     // It is already a managed entity within this transaction.
                     managedLocatieDTO = optionalLocatieDTO.get();
-                } else {
-                    // If LocatieDTO does not exist, save the new one to make it managed.
-                    locatieDTO.setLocatieType(embeddedLocatie.getLocatieType());
-                    locatieDTO.setNoemer(embeddedLocatie.getNoemer());
-
-                    BoundingBoxDTO boundingBoxDTO = boundingBoxMapper.toBoundingBoxDTO(embeddedLocatie.getBoundingBox());
-                    locatieDTO.setBoundingBox(boundingBoxDTO);
-
-                    RegistratiegegevensDTO registratiegegevensDTO = registratieGegevensMapper.toRegistratiegegevensDTO(embeddedLocatie.getGeregistreerdMet());
-
-                    locatieDTO.setRegistratiegegevens(registratiegegevensDTO);
-
-                    locatieDTO.setRegelingsgebieden(new HashSet<>());
+                } else { // If LocatieDTO does not exist, save the new one to make it managed.
+                    LocatieDTO locatieDTO = new LocatieDTO();
+                    fillLocatieDTO(locatieDTO, embeddedLocatie);
 
                     managedLocatieDTO = locatieRepository.save(locatieDTO);
 
                     Set<LocatieDTO> managedEmbeddedLocatieDTO = new HashSet<>();
-                    //
+
                     // Een gebiedengroep omvat 1..n locaties
                     if (locatieDTO.getLocatieType().getValue().equals("Gebiedengroep")) {
                         List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
@@ -324,19 +317,7 @@ public class OzonRegelingenStreamService {
                                 managedLocatieDTO.addMember(foundGebiedDTO);
                             } else {
                                 LocatieDTO gebiedDTO = new LocatieDTO();
-                                gebiedDTO.setIdentificatie(gebied.getIdentificatie().toString());
-                                gebiedDTO.setGeometrieIdentificatie(gebied.getGeometrieIdentificatie());
-                                gebiedDTO.setLocatieType(gebied.getLocatieType());
-                                gebiedDTO.setNoemer(gebied.getNoemer());
-
-                                BoundingBoxDTO boundingBoxOmvatDTO = boundingBoxMapper.toBoundingBoxDTO(gebied.getBoundingBox());
-                                gebiedDTO.setBoundingBox(boundingBoxOmvatDTO);
-
-                                RegistratiegegevensDTO registratiegegevensOmvatDTO = registratieGegevensMapper.toRegistratiegegevensDTO(gebied.getGeregistreerdMet());
-
-                                gebiedDTO.setRegistratiegegevens(registratiegegevensOmvatDTO);
-
-                                gebiedDTO.setRegelingsgebieden(new HashSet<>());
+                                fillLocatieDTO(gebiedDTO, gebied);
 
                                 LocatieDTO managedOmvatDTO = locatieRepository.save(gebiedDTO);
                                 log.info("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
@@ -344,15 +325,25 @@ public class OzonRegelingenStreamService {
                                 managedLocatieDTO.addMember(managedOmvatDTO);
                             }
                         });
-
                         locatieRepository.save(managedLocatieDTO);
                     }
                 }
                 managedLocatiesForRegeling.add(managedLocatieDTO);
             }
-
         }
-        regelingDTO.setRegelingsgebied(managedLocatiesForRegeling);
+        return managedLocatiesForRegeling;
+    }
+
+    private void fillLocatieDTO(LocatieDTO locatieDTO, EmbeddedLocatie embeddedLocatie) {
+        locatieDTO.setIdentificatie(embeddedLocatie.getIdentificatie().toString());
+        locatieDTO.setGeometrieIdentificatie(embeddedLocatie.getGeometrieIdentificatie());
+        locatieDTO.setLocatieType(embeddedLocatie.getLocatieType());
+        locatieDTO.setNoemer(embeddedLocatie.getNoemer());
+        BoundingBoxDTO boundingBoxDTO = boundingBoxMapper.toBoundingBoxDTO(embeddedLocatie.getBoundingBox());
+        locatieDTO.setBoundingBox(boundingBoxDTO);
+        RegistratiegegevensDTO registratiegegevensDTO = registratieGegevensMapper.toRegistratiegegevensDTO(embeddedLocatie.getGeregistreerdMet());
+        locatieDTO.setRegistratiegegevens(registratiegegevensDTO);
+        locatieDTO.setRegelingsgebieden(new HashSet<>());
     }
 
     private void oneToMany(RegelingDTO regelingDTO) {
@@ -379,5 +370,4 @@ public class OzonRegelingenStreamService {
             regelingDTO.setType(managedSoortRegelingDTO);
         }
     }
-
 }

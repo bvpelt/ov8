@@ -110,17 +110,18 @@ public class RegelingDTO implements Serializable {
         this.opvolgerVan.remove(opvolgerVan);
         opvolgerVan.getOpvolgerVan().remove(this); // Maintain the other side
     }
-/*
-    public void addRegelingsgebied(LocatieDTO regelingsgebied) {
-        this.regelingsgebied.add(regelingsgebied);
-        regelingsgebied.getRegelingsgebieden().add(this); // Maintain the other side
-    }
 
-    public void removeRegelingsgebied(LocatieDTO regelingsgebied) {
-        this.regelingsgebied.remove(regelingsgebied);
-        regelingsgebied.getRegelingsgebieden().remove(this); // Maintain the other side
-    }
-*/
+    /*
+        public void addRegelingsgebied(LocatieDTO regelingsgebied) {
+            this.regelingsgebied.add(regelingsgebied);
+            regelingsgebied.getRegelingsgebieden().add(this); // Maintain the other side
+        }
+
+        public void removeRegelingsgebied(LocatieDTO regelingsgebied) {
+            this.regelingsgebied.remove(regelingsgebied);
+            regelingsgebied.getRegelingsgebieden().remove(this); // Maintain the other side
+        }
+    */
     // Helper method to maintain bidirectional relationship if needed, though often not strictly necessary for saving
     public void addLocatie(LocatieDTO locatie) {
         this.regelingsgebied.add(locatie);
