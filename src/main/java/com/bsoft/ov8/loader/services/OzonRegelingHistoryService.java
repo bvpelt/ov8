@@ -2,13 +2,20 @@ package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.clients.OzonRegelingenClient;
 import com.bsoft.ov8.loader.database.RegelingDTO;
+import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import lombok.extern.slf4j.Slf4j;
+import nl.overheid.omgevingswet.ozon.model.Regeling;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -20,13 +27,19 @@ public class OzonRegelingHistoryService {
     private final OzonRegelingenClient ozonRegelingenClient;
     private final WebClient webClient;
     private final RegelingRepository regelingRepository;
+    private final RegelingMapper regelingMapper;
+
+    @Value("${api.ozon.base-url}")
+    private String ozonBaseUrl;
 
     public OzonRegelingHistoryService(OzonRegelingenClient ozonRegelingenClient,
                                       WebClient webClient,
-                                      RegelingRepository regelingRepository) {
+                                      RegelingRepository regelingRepository,
+                                      RegelingMapper regelingMapper) {
         this.ozonRegelingenClient = ozonRegelingenClient;
         this.webClient = webClient;
         this.regelingRepository = regelingRepository;
+        this.regelingMapper = regelingMapper;
     }
 
     /**
@@ -40,57 +53,94 @@ public class OzonRegelingHistoryService {
      * ---- save regeling
      */
     public void processAll() {
-
+        retrieveAndSaveHistoricalRegelingen()
+                .subscribe();
     }
 
     /**
-     * Retrieves historical versions of RegelingDTOs by querying the database for
-     * RegelingDTOs with versie > 1 and then making reactive API calls for previous versions.
+     * Retrieves RegelingDTOs from the database, fetches corresponding historical versions
+     * from an external API, converts them, and saves them to the database reactively.
      *
-     * @return A Flux of RegelingDTOs representing the previous versions retrieved from the API.
+     * @return A Flux of RegelingDTOs that were successfully fetched and saved.
      */
-    public Flux<RegelingDTO> retrieveHistoricalRegelingenReactive() {
-        // 1. Get RegelingDTOs from the database with versie > 1
-        List<RegelingDTO> regelingenWithHistory = regelingRepository.findByVersieGreaterThan(1);
+    /**
+     * Retrieves RegelingDTOs from the database, fetches corresponding historical versions
+     * from an external API, converts them, and saves them to the database reactively.
+     *
+     * @return A Flux of RegelingDTOs that were successfully fetched and saved.
+     */
+    public Flux<RegelingDTO> retrieveAndSaveHistoricalRegelingen() {
+        return Mono.fromCallable(() -> regelingRepository.findByVersieGreaterThan(1))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(dbRegelingDTO -> {
+                    String uriIdentifier = dbRegelingDTO.getIdentificatie().replace("/", "_");
 
-        // 2. Convert the list to a Flux
-        return Flux.fromIterable(regelingenWithHistory)
-                .flatMap(currentRegeling -> {
-                    // Generate a stream of version numbers from (current version - 1) down to 1
-                    List<Integer> versionsToFetch = IntStream.rangeClosed(1, currentRegeling.getRegistratiegegevens().getVersie().intValue() - 1)
-                            .boxed()
-                            .collect(Collectors.toList());
+                    // Use effectively final variables for dates
+                    final LocalDate finalGeldigOpDate;
+                    final LocalDate finalInwerkingOpDate;
 
-                    // For each version number, make an API call
-                    return Flux.fromIterable(versionsToFetch)
-                            .flatMap(versionToFetch ->
-                                    fetchSpecificVersionFromApi(currentRegeling.getIdentificatie(), versionToFetch)
-                            );
-                }); // Make a reactive API call for each
+                    if (dbRegelingDTO.getRegistratiegegevens() != null) {
+                        finalGeldigOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid() != null) ?
+                                dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid().minusDays(1) : null;
+                        finalInwerkingOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginInwerking() != null) ?
+                                dbRegelingDTO.getRegistratiegegevens().getBeginInwerking().minusDays(1) : null;
+                    } else {
+                        finalGeldigOpDate = null;
+                        finalInwerkingOpDate = null;
+                    }
+
+                    if (finalGeldigOpDate == null || finalInwerkingOpDate == null) {
+                        log.info("Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
+                        return Mono.empty();
+                    }
+
+                    return fetchRegelingFromApi(uriIdentifier, finalGeldigOpDate, finalInwerkingOpDate)
+                            .flatMap(apiRegeling -> {
+                                RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
+                                newRegelingDTO.setId(null);
+
+                                return Mono.fromCallable(() -> regelingRepository.save(newRegelingDTO))
+                                        .subscribeOn(Schedulers.boundedElastic());
+                            })
+                            .onErrorResume(e -> {
+                                // Use the effectively final date variables here
+                                log.error("Error fetching or saving regeling for ID {} at geldigOp {} , inwerkingOp {} : {}",
+                                        dbRegelingDTO.getIdentificatie(), finalGeldigOpDate, finalInwerkingOpDate, e.getMessage());
+                                return Mono.empty();
+                            });
+                });
+    }
+
+    private RegelingDTO convertToRegelingDTO(Regeling apiRegeling) {
+        return regelingMapper.toRegelingDTO(apiRegeling);
     }
 
     /**
-     * Makes a reactive API call to retrieve a specific version of a RegelingDTO.
-     * Assumes an API endpoint like /api/regelingen/{identificatie}/versions?version={versionNumber}
+     * Makes a reactive API call to retrieve a Regeling from the external service.
+     * Assumes WebClient is configured with the base URL (e.g., api.ozon.base-url).
      *
-     * @param identificatie  The unique identifier of the regeling.
-     * @param versionToFetch The specific version number to retrieve.
-     * @return A Mono that emits the specific RegelingDTO version, or an empty Mono if not found/error.
+     * @param uriIdentifier The identificatie with '/' replaced by '_'.
+     * @param geldigOpDate The geldigOp date to use in the API query.
+     * @param inwerkingOpDate The inwerkingOp date to use in the API query.
+     * @return A Mono that emits the Regeling object from the API, or an empty Mono if not found/error.
      */
-    private Mono<RegelingDTO> fetchSpecificVersionFromApi(String identificatie, Integer versionToFetch) {
-        // Construct the API URL. Adapt this to your actual API's structure.
-        // This is a hypothetical example assuming querying by version number.
-        String apiPath = String.format("/api/regelingen/%s/versions", identificatie);
+    private Mono<Regeling> fetchRegelingFromApi(String uriIdentifier, LocalDate geldigOpDate, LocalDate inwerkingOpDate) {
+        String apiPath = String.format("/regelingen/%s", uriIdentifier);
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ozonBaseUrl)
+                .path("/regelingen")
+                .queryParam("geldigOp", geldigOpDate.toString())
+                .queryParam("inWerkingOp", inwerkingOpDate.toString());
+
+        String uri = uriBuilder.build().toUriString();
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(apiPath)
-                        .queryParam("version", versionToFetch) // Query by version number
-                        .build())
+                .uri(uri)
                 .retrieve()
-                .bodyToMono(RegelingDTO.class) // Assuming the API returns a single RegelingDTO
-                .doOnError(e -> System.err.println("Error fetching version " + versionToFetch +
-                        " for " + identificatie + ": " + e.getMessage()))
-                .onErrorResume(e -> Mono.empty()); // Return empty Mono on error, or handle as needed
+                .bodyToMono(Regeling.class) // Assuming 'Regeling' is your POJO mapping the API response
+                .doOnError(e -> System.err.println("API call error for " + uriIdentifier + ": " + e.getMessage()))
+                .onErrorResume(e -> Mono.empty()); // Return empty Mono on API error (e.g., 404, network issue)
     }
+
 }
