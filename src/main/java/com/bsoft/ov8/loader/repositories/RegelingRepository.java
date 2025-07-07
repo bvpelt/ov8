@@ -24,6 +24,6 @@ public interface RegelingRepository extends PagingAndSortingRepository<RegelingD
 
     @Query(
             value =
-                    "SELECT * FROM regeling WHERE versie > :version order by identification", nativeQuery = true)
+                    "SELECT * FROM regeling WHERE versie > :version order by identificatie", nativeQuery = true)
     List<RegelingDTO> findByVersieGreaterThan(Integer version);
 }

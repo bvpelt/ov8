@@ -97,10 +97,16 @@ public class OzonRegelingHistoryService {
 
                     return fetchRegelingFromApi(uriIdentifier, finalGeldigOpDate, finalInwerkingOpDate)
                             .flatMap(apiRegeling -> {
+                                log.info("apiRegeling: {}", apiRegeling);
                                 RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
+                                log.info("newRegelingDTO: {}", newRegelingDTO);
                                 newRegelingDTO.setId(null);
 
-                                return Mono.fromCallable(() -> regelingRepository.save(newRegelingDTO))
+                                return Mono.fromCallable(() -> {
+                                    RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+                                    log.info("Saved regeling {} identificatie: {} versie: {}", savedRegeling.getId(), savedRegeling.getIdentificatie(), savedRegeling.getRegistratiegegevens().getVersie());
+                                    return savedRegeling;
+                                })
                                         .subscribeOn(Schedulers.boundedElastic());
                             })
                             .onErrorResume(e -> {
@@ -129,7 +135,7 @@ public class OzonRegelingHistoryService {
         String apiPath = String.format("/regelingen/%s", uriIdentifier);
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ozonBaseUrl)
-                .path("/regelingen")
+                .path(apiPath)
                 .queryParam("geldigOp", geldigOpDate.toString())
                 .queryParam("inWerkingOp", inwerkingOpDate.toString());
 
@@ -139,7 +145,7 @@ public class OzonRegelingHistoryService {
                 .uri(uri)
                 .retrieve()
                 .bodyToMono(Regeling.class) // Assuming 'Regeling' is your POJO mapping the API response
-                .doOnError(e -> System.err.println("API call error for " + uriIdentifier + ": " + e.getMessage()))
+                .doOnError(e -> log.error("API call error for {}: {}", uriIdentifier, e.getMessage()))
                 .onErrorResume(e -> Mono.empty()); // Return empty Mono on API error (e.g., 404, network issue)
     }
 
