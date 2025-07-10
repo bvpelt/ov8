@@ -1,8 +1,9 @@
 package com.bsoft.ov8.loader;
+
 import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
 import com.bsoft.ov8.loader.database.RegelingDTO;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
 import nl.overheid.omgevingswet.ozon.model.BevoegdGezag;
+import nl.overheid.omgevingswet.ozon.model.Regeling;
 
 import java.net.URI;
 import java.util.UUID;
