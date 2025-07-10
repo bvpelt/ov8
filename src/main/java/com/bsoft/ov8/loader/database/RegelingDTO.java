@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@ToString(exclude = {"bevoegdGezag", "type"})
+@ToString(exclude = {"bevoegdGezag", "type", "opvolgerVan", "regelingsgebied"})
 @Entity
 @Table(name = "regeling", schema = "public", catalog = "ov8")
 public class RegelingDTO implements Serializable {

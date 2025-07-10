@@ -1,6 +1,6 @@
 package com.bsoft.ov8.loader.controller;
 
-import com.bsoft.ov8.loader.services.OzonRegelingHistoryService;
+import com.bsoft.ov8.loader.services.OzonRegelingHistoryService01;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class RegelingHistoryController {
 
-    private final OzonRegelingHistoryService ozonRegelingHistoryService;
+    private final OzonRegelingHistoryService01 ozonRegelingHistoryService;
 
 
     @GetMapping("/proces")

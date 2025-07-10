@@ -15,10 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -43,29 +40,16 @@ public class OzonRegelingHistoryService {
     }
 
     /**
-     * To proces history
-     * - find all regelingen with version > 1
-     * -- for each regeling r
-     * --- get r.versie
-     * --- while r.versie > 1
-     * --- get previous regeling p with p.identificatie = r.identifiatie and p.geldigheid = r.geldigheid -1 and p.inwerking = r.inwerking - 1
-     * --- if regeling does not exist
-     * ---- save regeling
+     * Process all regelingen with version > 1 sequentially
      */
     public void processAll() {
         retrieveAndSaveHistoricalRegelingen()
-                .subscribe();
+                .blockLast(); // Block to ensure completion
     }
 
     /**
      * Retrieves RegelingDTOs from the database, fetches corresponding historical versions
-     * from an external API, converts them, and saves them to the database reactively.
-     *
-     * @return A Flux of RegelingDTOs that were successfully fetched and saved.
-     */
-    /**
-     * Retrieves RegelingDTOs from the database, fetches corresponding historical versions
-     * from an external API, converts them, and saves them to the database reactively.
+     * from an external API, converts them, and saves them to the database SEQUENTIALLY.
      *
      * @return A Flux of RegelingDTOs that were successfully fetched and saved.
      */
@@ -73,47 +57,170 @@ public class OzonRegelingHistoryService {
         return Mono.fromCallable(() -> regelingRepository.findByVersieGreaterThan(1))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
-                .flatMap(dbRegelingDTO -> {
-                    String uriIdentifier = dbRegelingDTO.getIdentificatie().replace("/", "_");
+                // KEY CHANGE: Use concatMap instead of flatMap for sequential processing
+                .concatMap(this::processRegelingSequentially)
+                .onErrorContinue((throwable, obj) -> {
+                    log.error("Error processing regeling: {}, error: {}", obj, throwable.getMessage());
+                });
+    }
 
-                    // Use effectively final variables for dates
-                    final LocalDate finalGeldigOpDate;
-                    final LocalDate finalInwerkingOpDate;
+    /**
+     * Process a single regeling and all its historical versions sequentially
+     */
+    private Flux<RegelingDTO> processRegelingSequentially(RegelingDTO dbRegelingDTO) {
+        log.info("0001 Processing regeling: {}", dbRegelingDTO.toString());
 
-                    if (dbRegelingDTO.getRegistratiegegevens() != null) {
-                        finalGeldigOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid() != null) ?
-                                dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid().minusDays(1) : null;
-                        finalInwerkingOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginInwerking() != null) ?
-                                dbRegelingDTO.getRegistratiegegevens().getBeginInwerking().minusDays(1) : null;
-                    } else {
-                        finalGeldigOpDate = null;
-                        finalInwerkingOpDate = null;
-                    }
+        String uriIdentifier = dbRegelingDTO.getIdentificatie().replace("/", "_");
 
-                    if (finalGeldigOpDate == null || finalInwerkingOpDate == null) {
-                        log.info("Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
-                        return Mono.empty();
-                    }
+        // Calculate the dates for the previous version
+        LocalDate finalGeldigOpDate = null;
+        LocalDate finalInwerkingOpDate = null;
 
-                    return fetchRegelingFromApi(uriIdentifier, finalGeldigOpDate, finalInwerkingOpDate)
+        if (dbRegelingDTO.getRegistratiegegevens() != null) {
+            finalGeldigOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid() != null) ?
+                    dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid().minusDays(1) : null;
+            finalInwerkingOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginInwerking() != null) ?
+                    dbRegelingDTO.getRegistratiegegevens().getBeginInwerking().minusDays(1) : null;
+        }
+
+        if (finalGeldigOpDate == null || finalInwerkingOpDate == null) {
+            log.info("0002 Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
+            return Flux.empty();
+        }
+
+        // Process all historical versions for this regeling sequentially
+        return processHistoricalVersionsSequentially(
+                uriIdentifier,
+                dbRegelingDTO.getRegistratiegegevens().getVersie().intValue(),
+                finalGeldigOpDate,
+                finalInwerkingOpDate
+        );
+    }
+
+    /**
+     * Recursively fetch and save all historical versions sequentially
+     */
+    private Flux<RegelingDTO> processHistoricalVersionsSequentially(
+            String uriIdentifier,
+            Integer currentVersion,
+            LocalDate geldigOpDate,
+            LocalDate inwerkingOpDate) {
+
+        if (currentVersion <= 1) {
+            // Base case: no more versions to process
+            return Flux.empty();
+        }
+
+        log.info("0003 Fetching historical version for {}, geldigOp: {}, inwerkingOp: {}",
+                uriIdentifier, geldigOpDate, inwerkingOpDate);
+
+        return fetchRegelingFromApi(uriIdentifier, geldigOpDate, inwerkingOpDate)
+                .flatMap(apiRegeling -> {
+                    log.info("0004 Found historical version: {}", apiRegeling);
+
+                    // Convert and save this version
+                    RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
+                    newRegelingDTO.setId(null); // Ensure new entity
+
+                    return Mono.fromCallable(() -> {
+                                // Check if this version already exists
+                                String identificatie = newRegelingDTO.getIdentificatie();
+                                LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
+                                LocalDate beginInwerking = newRegelingDTO.getRegistratiegegevens().getBeginInwerking();
+
+                                boolean exists = regelingRepository.existsByIdentificatieAndRegistratiegegevens_BeginGeldigheidAndRegistratiegegevens_BeginInwerking(
+                                        identificatie, beginGeldigheid, beginInwerking);
+
+                                if (exists) {
+                                    log.info("0005 Version already exists, skipping save for {}", identificatie);
+                                    return null; // Skip saving
+                                }
+
+                                RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+                                log.info("0006 Saved regeling {} identificatie: {} versie: {}",
+                                        savedRegeling.getId(),
+                                        savedRegeling.getIdentificatie(),
+                                        savedRegeling.getRegistratiegegevens().getVersie());
+                                return savedRegeling;
+                            })
+                            .subscribeOn(Schedulers.boundedElastic());
+                })
+                .cast(RegelingDTO.class)
+                .flux()
+                .filter(dto -> dto != null) // Filter out null results from skipped saves
+                .concatWith(
+                        // SEQUENTIAL RECURSION: Process next historical version
+                        Mono.defer(() -> {
+                                    // Calculate dates for the next (older) version
+                                    LocalDate nextGeldigOpDate = geldigOpDate.minusDays(1);
+                                    LocalDate nextInwerkingOpDate = inwerkingOpDate.minusDays(1);
+
+                                    return processHistoricalVersionsSequentially(
+                                            uriIdentifier,
+                                            currentVersion - 1,
+                                            nextGeldigOpDate,
+                                            nextInwerkingOpDate
+                                    );
+                                })
+                                .flux()
+                )
+                .onErrorResume(e -> {
+                    log.error("0007 Error processing historical version for {} at geldigOp {} , inwerkingOp {} : {}",
+                            uriIdentifier, geldigOpDate, inwerkingOpDate, e.getMessage());
+                    return Flux.empty();
+                });
+    }
+
+    /**
+     * Alternative approach: Process all versions using an iterative approach instead of recursion
+     */
+    private Flux<RegelingDTO> processHistoricalVersionsIteratively(
+            String uriIdentifier,
+            Integer maxVersion,
+            LocalDate initialGeldigOpDate,
+            LocalDate initialInwerkingOpDate) {
+
+        return Flux.range(1, maxVersion - 1) // Generate versions from 1 to maxVersion-1
+                .map(versionOffset -> maxVersion - versionOffset) // Process from highest to lowest
+                .concatMap(version -> {
+                    // Calculate dates for this version
+                    LocalDate geldigOpDate = initialGeldigOpDate.minusDays(maxVersion - version);
+                    LocalDate inwerkingOpDate = initialInwerkingOpDate.minusDays(maxVersion - version);
+
+                    return fetchRegelingFromApi(uriIdentifier, geldigOpDate, inwerkingOpDate)
                             .flatMap(apiRegeling -> {
-                                log.info("apiRegeling: {}", apiRegeling);
                                 RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
-                                log.info("newRegelingDTO: {}", newRegelingDTO);
                                 newRegelingDTO.setId(null);
 
                                 return Mono.fromCallable(() -> {
-                                    RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
-                                    log.info("Saved regeling {} identificatie: {} versie: {}", savedRegeling.getId(), savedRegeling.getIdentificatie(), savedRegeling.getRegistratiegegevens().getVersie());
-                                    return savedRegeling;
-                                })
+                                            String identificatie = newRegelingDTO.getIdentificatie();
+                                            LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
+                                            LocalDate beginInwerking = newRegelingDTO.getRegistratiegegevens().getBeginInwerking();
+
+                                            boolean exists = regelingRepository.existsByIdentificatieAndRegistratiegegevens_BeginGeldigheidAndRegistratiegegevens_BeginInwerking(
+                                                    identificatie, beginGeldigheid, beginInwerking);
+
+                                            if (exists) {
+                                                log.info("Version already exists, skipping save for {}", identificatie);
+                                                return null;
+                                            }
+
+                                            RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+                                            log.info("Saved regeling {} identificatie: {} versie: {}",
+                                                    savedRegeling.getId(),
+                                                    savedRegeling.getIdentificatie(),
+                                                    savedRegeling.getRegistratiegegevens().getVersie());
+                                            return savedRegeling;
+                                        })
                                         .subscribeOn(Schedulers.boundedElastic());
                             })
+                            .cast(RegelingDTO.class)
+                            .flux()
+                            .filter(dto -> dto != null)
                             .onErrorResume(e -> {
-                                // Use the effectively final date variables here
-                                log.error("Error fetching or saving regeling for ID {} at geldigOp {} , inwerkingOp {} : {}",
-                                        dbRegelingDTO.getIdentificatie(), finalGeldigOpDate, finalInwerkingOpDate, e.getMessage());
-                                return Mono.empty();
+                                log.error("Error processing version {} for {}: {}",
+                                        version, uriIdentifier, e.getMessage());
+                                return Flux.empty();
                             });
                 });
     }
@@ -124,12 +231,6 @@ public class OzonRegelingHistoryService {
 
     /**
      * Makes a reactive API call to retrieve a Regeling from the external service.
-     * Assumes WebClient is configured with the base URL (e.g., api.ozon.base-url).
-     *
-     * @param uriIdentifier The identificatie with '/' replaced by '_'.
-     * @param geldigOpDate The geldigOp date to use in the API query.
-     * @param inwerkingOpDate The inwerkingOp date to use in the API query.
-     * @return A Mono that emits the Regeling object from the API, or an empty Mono if not found/error.
      */
     private Mono<Regeling> fetchRegelingFromApi(String uriIdentifier, LocalDate geldigOpDate, LocalDate inwerkingOpDate) {
         String apiPath = String.format("/regelingen/%s", uriIdentifier);
@@ -144,9 +245,8 @@ public class OzonRegelingHistoryService {
         return webClient.get()
                 .uri(uri)
                 .retrieve()
-                .bodyToMono(Regeling.class) // Assuming 'Regeling' is your POJO mapping the API response
+                .bodyToMono(Regeling.class)
                 .doOnError(e -> log.error("API call error for {}: {}", uriIdentifier, e.getMessage()))
-                .onErrorResume(e -> Mono.empty()); // Return empty Mono on API error (e.g., 404, network issue)
+                .onErrorResume(e -> Mono.empty());
     }
-
 }

@@ -195,7 +195,7 @@ public class RegelingMapperTest {
         source.setPublicatieID("PUB123");
         source.setInwerkingTot(inwerkingTotDate);
         source.setGeldigTot(geldigTotDate);
-        
+
         // When
         RegelingDTO result = regelingMapper.toRegelingDTO(source);
 

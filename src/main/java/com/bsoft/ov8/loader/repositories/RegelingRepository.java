@@ -24,6 +24,12 @@ public interface RegelingRepository extends PagingAndSortingRepository<RegelingD
 
     @Query(
             value =
+                    "SELECT * FROM regeling WHERE identificatie = :identificatie and tijdstipregistratie=:tijdstipRegistratie and begingeldigheid = :beginGeldigheid", nativeQuery = true)
+    Optional<RegelingDTO> existsByIdentificatieAndRegistratiegegevens_BeginGeldigheidAndRegistratiegegevens_BeginInwerking(String identificatie, OffsetDateTime tijdstipRegistratie, LocalDate beginGeldigheid);
+
+
+    @Query(
+            value =
                     "SELECT * FROM regeling WHERE versie > :version order by identificatie", nativeQuery = true)
     List<RegelingDTO> findByVersieGreaterThan(Integer version);
 }
