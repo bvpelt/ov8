@@ -1,4 +1,4 @@
-package com.bsoft.ov8.loader.controller;
+package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
 import com.bsoft.ov8.loader.database.LocatieDTO;
@@ -156,50 +156,63 @@ public class RegelingDTOSaver {
             EmbeddedLocatie embeddedLocatie = regelingAllOfEmbedded.getRegelingsgebied();
             if (embeddedLocatie != null) {
 
-                Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
-                        embeddedLocatie.getIdentificatie().toString(),
-                        embeddedLocatie.getGeometrieIdentificatie());
+                LocatieDTO managedLocatieDTO = saveEmbedded(regelingDTO, embeddedLocatie, false);
+                managedLocatiesForRegeling.add(managedLocatieDTO);
+            }
 
-                LocatieDTO managedLocatieDTO;
-                if (optionalLocatieDTO.isPresent()) { // If LocatieDTO already exists, use the one from the database directly.
-                    // It is already a managed entity within this transaction.
-                    managedLocatieDTO = optionalLocatieDTO.get();
-                } else { // If LocatieDTO does not exist, save the new one to make it managed.
-                    LocatieDTO locatieDTO = locatieMapper.toLocatieDTO(embeddedLocatie);
-
-                    managedLocatieDTO = locatieRepository.save(locatieDTO);
-
-                    Set<LocatieDTO> managedEmbeddedLocatieDTO = new HashSet<>();
-
-                    // Een gebiedengroep omvat 1..n locaties
-                    if (locatieDTO.getLocatieType().getValue().equals("Gebiedengroep")) {
-                        List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
-                        log.debug("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
-                        omvat.forEach(gebied -> {
-
-                            Optional<LocatieDTO> optionalGebiedDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
-                                    gebied.getIdentificatie().toString(),
-                                    gebied.getGeometrieIdentificatie());
-
-                            if (optionalGebiedDTO.isPresent()) {
-                                LocatieDTO foundGebiedDTO = optionalGebiedDTO.get();
-                                managedLocatieDTO.addMember(foundGebiedDTO);
-                            } else {
-                                LocatieDTO gebiedDTO = locatieMapper.toLocatieDTO(gebied);
-
-                                LocatieDTO managedOmvatDTO = locatieRepository.save(gebiedDTO);
-                                log.debug("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
-
-                                managedLocatieDTO.addMember(managedOmvatDTO);
-                            }
-                        });
-                        locatieRepository.save(managedLocatieDTO);
-                    }
-                }
+            EmbeddedLocatie pons = regelingAllOfEmbedded.getPons();
+            if (pons != null) {
+                LocatieDTO managedLocatieDTO = saveEmbedded(regelingDTO, pons, true);
                 managedLocatiesForRegeling.add(managedLocatieDTO);
             }
         }
         return managedLocatiesForRegeling;
+    }
+
+    private LocatieDTO saveEmbedded(RegelingDTO regelingDTO, EmbeddedLocatie embeddedLocatie, Boolean ispons) {
+        Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                embeddedLocatie.getIdentificatie().toString(),
+                embeddedLocatie.getGeometrieIdentificatie());
+
+        LocatieDTO managedLocatieDTO;
+        if (optionalLocatieDTO.isPresent()) { // If LocatieDTO already exists, use the one from the database directly.
+            // It is already a managed entity within this transaction.
+            managedLocatieDTO = optionalLocatieDTO.get();
+        } else { // If LocatieDTO does not exist, save the new one to make it managed.
+            LocatieDTO locatieDTO = locatieMapper.toLocatieDTO(embeddedLocatie);
+            locatieDTO.setIsPons(ispons);
+
+            managedLocatieDTO = locatieRepository.save(locatieDTO);
+
+            Set<LocatieDTO> managedEmbeddedLocatieDTO = new HashSet<>();
+
+            // Een gebiedengroep omvat 1..n locaties
+            if (locatieDTO.getLocatieType().getValue().equals("Gebiedengroep")) {
+                List<EmbeddedLocatie> omvat = embeddedLocatie.getEmbedded().getOmvat();
+                log.debug("Gebieden omvat grootte: {}, parent: {}, regeling: {}", omvat.size(), locatieDTO.getIdentificatie(), regelingDTO.getIdentificatie());
+                omvat.forEach(gebied -> {
+
+                    Optional<LocatieDTO> optionalGebiedDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(
+                            gebied.getIdentificatie().toString(),
+                            gebied.getGeometrieIdentificatie());
+
+                    if (optionalGebiedDTO.isPresent()) {
+                        LocatieDTO foundGebiedDTO = optionalGebiedDTO.get();
+                        managedLocatieDTO.addMember(foundGebiedDTO);
+                    } else {
+                        LocatieDTO gebiedDTO = locatieMapper.toLocatieDTO(gebied);
+                        gebiedDTO.setIsPons(ispons);
+
+                        LocatieDTO managedOmvatDTO = locatieRepository.save(gebiedDTO);
+                        log.debug("Gebiedengroep insert: {} {}, gebied: {} {}", managedLocatieDTO.getId(), managedLocatieDTO.getIdentificatie(), managedOmvatDTO.getId(), managedOmvatDTO.getIdentificatie());
+
+                        managedLocatieDTO.addMember(managedOmvatDTO);
+                    }
+                });
+                locatieRepository.save(managedLocatieDTO);
+            }
+        }
+        return managedLocatieDTO;
     }
 
 }

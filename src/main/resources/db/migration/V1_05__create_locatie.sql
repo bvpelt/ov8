@@ -5,6 +5,7 @@ create table locatie
     geometrieidentificatie text,
     locatietype            text,
     noemer                 text,
+    ispons                 boolean,
     minx                   bigint,
     miny                   bigint,
     maxx                   bigint,

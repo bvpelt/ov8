@@ -38,6 +38,9 @@ public class LocatieDTO implements Serializable {
     @Column(name = "noemer")
     private String noemer;
 
+    @Column(name = "ispons")
+    private Boolean isPons = false;
+
     @Embedded
     private BoundingBoxDTO boundingBox;
 

@@ -1,6 +1,5 @@
 package com.bsoft.ov8.loader.services;
 
-import com.bsoft.ov8.loader.controller.RegelingDTOSaver;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
@@ -142,7 +141,7 @@ public class OzonRegelingHistoryService {
                                 }
 
                                 RegelingDTO savedRegeling = regelingDTOSaver.saveRegeling(newRegelingDTO, apiRegeling);
-//                                RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+
                                 log.info("0008 - Saved regeling id: {} identificatie: {} versie: {}",
                                         savedRegeling.getId(),
                                         savedRegeling.getIdentificatie(),
@@ -247,7 +246,8 @@ public class OzonRegelingHistoryService {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ozonBaseUrl)
                 .path(apiPath)
                 .queryParam("geldigOp", geldigOpDate.toString())
-                .queryParam("inWerkingOp", inwerkingOpDate.toString());
+                .queryParam("inWerkingOp", inwerkingOpDate.toString())
+                .queryParam("_expand", true);
 
         String uri = uriBuilder.build().toUriString();
 
