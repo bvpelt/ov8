@@ -101,10 +101,10 @@ public class OzonRegelingHistoryService01 {
                                 newRegelingDTO.setId(null);
 
                                 return Mono.fromCallable(() -> {
-                                    RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
-                                    log.info("0005 Saved regeling {} identificatie: {} versie: {}", savedRegeling.getId(), savedRegeling.getIdentificatie(), savedRegeling.getRegistratiegegevens().getVersie());
-                                    return savedRegeling;
-                                })
+                                            RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+                                            log.info("0005 Saved regeling {} identificatie: {} versie: {}", savedRegeling.getId(), savedRegeling.getIdentificatie(), savedRegeling.getRegistratiegegevens().getVersie());
+                                            return savedRegeling;
+                                        })
                                         .subscribeOn(Schedulers.boundedElastic());
                             })
                             .onErrorResume(e -> {
@@ -124,8 +124,8 @@ public class OzonRegelingHistoryService01 {
      * Makes a reactive API call to retrieve a Regeling from the external service.
      * Assumes WebClient is configured with the base URL (e.g., api.ozon.base-url).
      *
-     * @param uriIdentifier The identificatie with '/' replaced by '_'.
-     * @param geldigOpDate The geldigOp date to use in the API query.
+     * @param uriIdentifier   The identificatie with '/' replaced by '_'.
+     * @param geldigOpDate    The geldigOp date to use in the API query.
      * @param inwerkingOpDate The inwerkingOp date to use in the API query.
      * @return A Mono that emits the Regeling object from the API, or an empty Mono if not found/error.
      */

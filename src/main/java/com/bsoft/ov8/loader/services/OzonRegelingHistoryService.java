@@ -1,6 +1,6 @@
 package com.bsoft.ov8.loader.services;
 
-import com.bsoft.ov8.loader.clients.OzonRegelingenClient;
+import com.bsoft.ov8.loader.controller.RegelingDTOSaver;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
@@ -15,36 +15,39 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
 public class OzonRegelingHistoryService {
 
-    private final OzonRegelingenClient ozonRegelingenClient;
     private final WebClient webClient;
     private final RegelingRepository regelingRepository;
     private final RegelingMapper regelingMapper;
+    private final RegelingDTOSaver regelingDTOSaver;
 
     @Value("${api.ozon.base-url}")
     private String ozonBaseUrl;
 
-    public OzonRegelingHistoryService(OzonRegelingenClient ozonRegelingenClient,
-                                      WebClient webClient,
+    public OzonRegelingHistoryService(WebClient webClient,
                                       RegelingRepository regelingRepository,
-                                      RegelingMapper regelingMapper) {
-        this.ozonRegelingenClient = ozonRegelingenClient;
+                                      RegelingMapper regelingMapper,
+                                      RegelingDTOSaver regelingDTOSaver) {
         this.webClient = webClient;
         this.regelingRepository = regelingRepository;
         this.regelingMapper = regelingMapper;
+        this.regelingDTOSaver = regelingDTOSaver;
     }
 
     /**
      * Process all regelingen with version > 1 sequentially
      */
     public void processAll() {
+        final long start = System.currentTimeMillis();
         retrieveAndSaveHistoricalRegelingen()
                 .blockLast(); // Block to ensure completion
+
+        log.info("Duration: " + (System.currentTimeMillis() - start));
     }
 
     /**
@@ -68,7 +71,7 @@ public class OzonRegelingHistoryService {
      * Process a single regeling and all its historical versions sequentially
      */
     private Flux<RegelingDTO> processRegelingSequentially(RegelingDTO dbRegelingDTO) {
-        log.info("0001 Processing regeling: {}", dbRegelingDTO.toString());
+        log.info("0001 - Processing regeling: {}", dbRegelingDTO.toString());
 
         String uriIdentifier = dbRegelingDTO.getIdentificatie().replace("/", "_");
 
@@ -84,7 +87,7 @@ public class OzonRegelingHistoryService {
         }
 
         if (finalGeldigOpDate == null || finalInwerkingOpDate == null) {
-            log.info("0002 Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
+            log.info("0002 - Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
             return Flux.empty();
         }
 
@@ -106,17 +109,19 @@ public class OzonRegelingHistoryService {
             LocalDate geldigOpDate,
             LocalDate inwerkingOpDate) {
 
+        log.info("0003 - processHistoricalVersionsSequentially version: {}, geldigOp: {}, inwerkingOp: {}, uri: {}", currentVersion, geldigOpDate, inwerkingOpDate, uriIdentifier);
+
         if (currentVersion <= 1) {
             // Base case: no more versions to process
             return Flux.empty();
         }
 
-        log.info("0003 Fetching historical version for {}, geldigOp: {}, inwerkingOp: {}",
+        log.info("0004 - Fetching historical version for {}, geldigOp: {}, inwerkingOp: {}",
                 uriIdentifier, geldigOpDate, inwerkingOpDate);
 
         return fetchRegelingFromApi(uriIdentifier, geldigOpDate, inwerkingOpDate)
                 .flatMap(apiRegeling -> {
-                    log.info("0004 Found historical version: {}", apiRegeling);
+                    log.info("0006 - Found historical version: {}", apiRegeling);
 
                     // Convert and save this version
                     RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
@@ -126,18 +131,19 @@ public class OzonRegelingHistoryService {
                                 // Check if this version already exists
                                 String identificatie = newRegelingDTO.getIdentificatie();
                                 LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
-                                LocalDate beginInwerking = newRegelingDTO.getRegistratiegegevens().getBeginInwerking();
+                                OffsetDateTime registratieMoment = newRegelingDTO.getRegistratiegegevens().getTijdstipRegistratie();
 
-                                boolean exists = regelingRepository.existsByIdentificatieAndRegistratiegegevens_BeginGeldigheidAndRegistratiegegevens_BeginInwerking(
-                                        identificatie, beginGeldigheid, beginInwerking);
+                                boolean exists = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
+                                        identificatie, registratieMoment, beginGeldigheid).isPresent();
 
                                 if (exists) {
-                                    log.info("0005 Version already exists, skipping save for {}", identificatie);
+                                    log.info("0007 - Version already exists, skipping save for {}", identificatie);
                                     return null; // Skip saving
                                 }
 
-                                RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
-                                log.info("0006 Saved regeling {} identificatie: {} versie: {}",
+                                RegelingDTO savedRegeling = regelingDTOSaver.saveRegeling(newRegelingDTO, apiRegeling);
+//                                RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
+                                log.info("0008 - Saved regeling id: {} identificatie: {} versie: {}",
                                         savedRegeling.getId(),
                                         savedRegeling.getIdentificatie(),
                                         savedRegeling.getRegistratiegegevens().getVersie());
@@ -150,19 +156,19 @@ public class OzonRegelingHistoryService {
                 .filter(dto -> dto != null) // Filter out null results from skipped saves
                 .concatWith(
                         // SEQUENTIAL RECURSION: Process next historical version
-                        Mono.defer(() -> {
-                                    // Calculate dates for the next (older) version
-                                    LocalDate nextGeldigOpDate = geldigOpDate.minusDays(1);
-                                    LocalDate nextInwerkingOpDate = inwerkingOpDate.minusDays(1);
+                        Flux.defer(() -> {
+                            // Calculate dates for the next (older) version
+                            LocalDate nextGeldigOpDate = geldigOpDate.minusDays(1);
+                            LocalDate nextInwerkingOpDate = inwerkingOpDate.minusDays(1);
 
-                                    return processHistoricalVersionsSequentially(
-                                            uriIdentifier,
-                                            currentVersion - 1,
-                                            nextGeldigOpDate,
-                                            nextInwerkingOpDate
-                                    );
-                                })
-                                .flux()
+
+                            return processHistoricalVersionsSequentially(
+                                    uriIdentifier,
+                                    currentVersion - 1,
+                                    nextGeldigOpDate,
+                                    nextInwerkingOpDate
+                            );
+                        })
                 )
                 .onErrorResume(e -> {
                     log.error("0007 Error processing historical version for {} at geldigOp {} , inwerkingOp {} : {}",
@@ -195,10 +201,10 @@ public class OzonRegelingHistoryService {
                                 return Mono.fromCallable(() -> {
                                             String identificatie = newRegelingDTO.getIdentificatie();
                                             LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
-                                            LocalDate beginInwerking = newRegelingDTO.getRegistratiegegevens().getBeginInwerking();
+                                            OffsetDateTime registratieMoment = newRegelingDTO.getRegistratiegegevens().getTijdstipRegistratie();
 
-                                            boolean exists = regelingRepository.existsByIdentificatieAndRegistratiegegevens_BeginGeldigheidAndRegistratiegegevens_BeginInwerking(
-                                                    identificatie, beginGeldigheid, beginInwerking);
+                                            boolean exists = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
+                                                    identificatie, registratieMoment, beginGeldigheid).isPresent();
 
                                             if (exists) {
                                                 log.info("Version already exists, skipping save for {}", identificatie);
@@ -233,6 +239,9 @@ public class OzonRegelingHistoryService {
      * Makes a reactive API call to retrieve a Regeling from the external service.
      */
     private Mono<Regeling> fetchRegelingFromApi(String uriIdentifier, LocalDate geldigOpDate, LocalDate inwerkingOpDate) {
+
+        log.info("0005 - fetchRegelingFromApi geldigOp: {}, inwerkingOp: {}, uri: {}", geldigOpDate, inwerkingOpDate, uriIdentifier);
+
         String apiPath = String.format("/regelingen/%s", uriIdentifier);
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ozonBaseUrl)
