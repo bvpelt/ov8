@@ -72,6 +72,7 @@ public class RegelingDTO implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "opvolgerregeling_id") // Column in the join table referring to the OTHER RegelingDTO (the one it succeeds)
     )
     // It's generally better to use Set for ManyToMany to avoid duplicate entries and for better performance
+    @Builder.Default
     private Set<RegelingDTO> opvolgerVan = new HashSet<>();
 
     @Column(name = "heeftbijlagen")
@@ -112,17 +113,6 @@ public class RegelingDTO implements Serializable {
         opvolgerVan.getOpvolgerVan().remove(this); // Maintain the other side
     }
 
-    /*
-        public void addRegelingsgebied(LocatieDTO regelingsgebied) {
-            this.regelingsgebied.add(regelingsgebied);
-            regelingsgebied.getRegelingsgebieden().add(this); // Maintain the other side
-        }
-
-        public void removeRegelingsgebied(LocatieDTO regelingsgebied) {
-            this.regelingsgebied.remove(regelingsgebied);
-            regelingsgebied.getRegelingsgebieden().remove(this); // Maintain the other side
-        }
-    */
     // Helper method to maintain bidirectional relationship if needed, though often not strictly necessary for saving
     public void addLocatie(LocatieDTO locatie) {
         this.regelingsgebied.add(locatie);

@@ -38,6 +38,7 @@ public class BevoegdGezagDTO implements Serializable {
     // It's the inverse side, used for navigation from BevoegdGezag to all Regelingen using it.
     // 'mappedBy' refers to the field name in the 'RegelingDTO' entity that owns the relationship.
     @OneToMany(mappedBy = "bevoegdGezag", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<RegelingDTO> regelingen = new HashSet<>(); // Can be named something like 'regelingenUsingThisBevoegdGezag'
 
 }
