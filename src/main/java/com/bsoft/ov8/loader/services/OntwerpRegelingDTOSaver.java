@@ -1,22 +1,20 @@
 package com.bsoft.ov8.loader.services;
 
-import com.bsoft.ov8.loader.database.*;
+import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
+import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;
+import com.bsoft.ov8.loader.database.SoortRegelingDTO;
 import com.bsoft.ov8.loader.mappers.LocatieMapper;
 import com.bsoft.ov8.loader.mappers.OntwerpRegelingMapper;
-import com.bsoft.ov8.loader.mappers.RegelingMapper;
-import com.bsoft.ov8.loader.repositories.*;
+import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
+import com.bsoft.ov8.loader.repositories.LocatieRepository;
+import com.bsoft.ov8.loader.repositories.OntwerpRegelingRepository;
+import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.EmbeddedLocatie;
 import nl.overheid.omgevingswet.ozon.model.Ontwerpregeling;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
-import nl.overheid.omgevingswet.ozon.model.RegelingAllOfEmbedded;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -99,10 +97,10 @@ public class OntwerpRegelingDTOSaver {
         }
 
         if (ontwerpRegelingDTO.getType() != null) {
-            Optional<SoortRegelingDTO> optionalSoortRegelingDTO = soortRegelingRepository.findByCode(ontwerpRegelingDTO.getType() .getCode());
+            Optional<SoortRegelingDTO> optionalSoortRegelingDTO = soortRegelingRepository.findByCode(ontwerpRegelingDTO.getType().getCode());
             SoortRegelingDTO managedSoortRegelingDTO;
             if (optionalSoortRegelingDTO.isEmpty()) {
-                managedSoortRegelingDTO = soortRegelingRepository.save(ontwerpRegelingDTO.getType() );
+                managedSoortRegelingDTO = soortRegelingRepository.save(ontwerpRegelingDTO.getType());
             } else {
                 managedSoortRegelingDTO = optionalSoortRegelingDTO.get();
             }

@@ -1,11 +1,11 @@
 package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;
-import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.OntwerpRegelingMapper;
-import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.*;
+import nl.overheid.omgevingswet.ozon.model.Ontwerpregeling;
+import nl.overheid.omgevingswet.ozon.model.Ontwerpregelingen;
+import nl.overheid.omgevingswet.ozon.model.OntwerpregelingenSort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,7 +13,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -52,12 +51,12 @@ public class OzonOntwerpRegelingenStreamService {
      * @return A Flux of all Regelingen across all pages.
      */
     public Flux<Ontwerpregeling> getAllOntwerpRegelingen(
-                                                   OffsetDateTime beschikbaarOp,
-                                                   Boolean _expand,
-                                                   Integer initialPage,
-                                                   Integer size,
-                                                   List<OntwerpregelingenSort> sort,
-                                                   String fields
+            OffsetDateTime beschikbaarOp,
+            Boolean _expand,
+            Integer initialPage,
+            Integer size,
+            List<OntwerpregelingenSort> sort,
+            String fields
     ) {
         String initialUri = buildInitialUri(
                 beschikbaarOp,

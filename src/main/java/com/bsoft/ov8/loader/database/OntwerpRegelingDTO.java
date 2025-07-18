@@ -2,20 +2,16 @@ package com.bsoft.ov8.loader.database;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nl.overheid.omgevingswet.ozon.model.*;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@ToString(exclude = {"aangeleverdDoorEen", "type" })
+@ToString(exclude = {"aangeleverdDoorEen", "type"})
 @Entity
 @Table(name = "regeling", schema = "public", catalog = "ov8")
 public class OntwerpRegelingDTO implements Serializable {
@@ -57,7 +53,7 @@ public class OntwerpRegelingDTO implements Serializable {
     @Column(name = "expressionid")
     private String expressionId;
 
-//    private SoortRegeling type;
+    //    private SoortRegeling type;
     // This is the "many" side of the Many-to-One relationship.
     // Each RegelingDTO has one BevoegdGezagDTO.
     // The foreign key column will be created in the 'regeling' table.

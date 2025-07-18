@@ -1,7 +1,6 @@
 package com.bsoft.ov8.loader.controller;
 
 import com.bsoft.ov8.loader.services.OzonOntwerpRegelingenStreamService;
-import com.bsoft.ov8.loader.services.OzonRegelingenStreamService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
@@ -11,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.model.Ontwerpregeling;
 import nl.overheid.omgevingswet.ozon.model.OntwerpregelingenSort;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
-import nl.overheid.omgevingswet.ozon.model.RegelingenSort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
