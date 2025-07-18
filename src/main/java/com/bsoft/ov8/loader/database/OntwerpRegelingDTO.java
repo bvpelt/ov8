@@ -51,9 +51,11 @@ public class OntwerpRegelingDTO implements Serializable {
     @Embedded
     private BesluitMetadataDTO besluitMetadata;
 
+    @Column(name = "technischid")
     private String technischId;
 
-    private URI expressionId;
+    @Column(name = "expressionid")
+    private String expressionId;
 
 //    private SoortRegeling type;
     // This is the "many" side of the Many-to-One relationship.
@@ -66,18 +68,25 @@ public class OntwerpRegelingDTO implements Serializable {
     @Embedded
     private OntwerpregistratiegegevensDTO geregistreerdMet;
 
+    @Column(name = "opschrift")
     private String opschrift;
 
+    @Column(name = "citeertitel")
     private String citeerTitel;
 
+    @Column(name = "conditie")
     private String conditie;
 
+    @Column(name = "heeftbijlagen")
     private Boolean heeftBijlagen;
 
+    @Column(name = "heefttoelichtingen")
     private Boolean heeftToelichtingen;
 
+    @Column(name = "isvervangregeling")
     private Boolean isVervangRegeling;
 
+    @Column(name = "publicatieid")
     private String publicatieID;
 
     @Embedded
