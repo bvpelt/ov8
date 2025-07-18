@@ -2,16 +2,16 @@ logging:
   level:
     org:
       apache:
-        http: debug
+        http: DEBUG
       springframework:
-        security: info
+        security: INFO
         web:
           reactive:
             function:
               client: DEBUG
           client: DEBUG
     com:
-      bsoft: debug
+      bsoft: DEBUG
     reactor:
       netty:
         http:
