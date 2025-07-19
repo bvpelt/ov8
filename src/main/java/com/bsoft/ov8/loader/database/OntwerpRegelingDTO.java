@@ -13,7 +13,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(of = "id")
 @ToString(exclude = {"aangeleverdDoorEen", "type"})
 @Entity
-@Table(name = "regeling", schema = "public", catalog = "ov8")
+@Table(name = "ontwerpregeling", schema = "public", catalog = "ov8")
 public class OntwerpRegelingDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

@@ -39,3 +39,43 @@ where l1.ispons = true and
       l1.parent_group_id = l2.id and
       l2.ispons = true and
       l2.locatietype = 'GEBIEDENGROEP';
+
+select t.aantal, t.bevoegdgezag_id, b.code, b.naam
+from
+    (select count(*) as aantal, bevoegdgezag_id
+     from ontwerpregeling
+     group by bevoegdgezag_id) t, bevoegdgezag b
+where t.bevoegdgezag_id = b.id
+order by t.aantal desc;
+
+-- unique ontwerpbesluitidentificatie ?
+select aantal, ontwerpbesluitidentificatie
+from
+    (select count(*) as aantal, ontwerpbesluitidentificatie
+     from ontwerpregeling
+     group by ontwerpbesluitidentificatie)
+order by aantal desc;
+
+-- unique technischid ?
+select aantal, technischid
+from
+    (select count(*) as aantal, technischid
+     from ontwerpregeling
+     group by technischid)
+order by aantal desc;
+
+-- unique expressionid ?
+select aantal, expressionid
+from
+    (select count(*) as aantal, expressionid
+     from ontwerpregeling
+     group by expressionid)
+order by aantal desc;
+
+-- unique publicatieid ?
+select aantal, publicatieid
+from
+    (select count(*) as aantal, publicatieid
+     from ontwerpregeling
+     group by publicatieid)
+order by aantal desc;

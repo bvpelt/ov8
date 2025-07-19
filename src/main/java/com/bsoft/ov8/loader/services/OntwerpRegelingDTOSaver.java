@@ -50,7 +50,6 @@ public class OntwerpRegelingDTOSaver {
 
         OntwerpRegelingDTO savedOntwerpRegelingDTO;
 
-        oneToMany(ontwerpRegelingDTO);
 
         // Check if RegelingDTO already exists
         Optional<OntwerpRegelingDTO> optionalOntwerpRegelingDTO = ontwerpRegelingRepository.findByIdentificatieAndTijdstipregistratieAndEindRegistratie(
@@ -64,26 +63,29 @@ public class OntwerpRegelingDTOSaver {
                     ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                     ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
+            ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
+
             savedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
 
 
             // --- Save the RegelingDTO ---
             // Hibernate will now correctly manage the many-to-many relationship
             // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
-            ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+            //ontwerpRegelingRepository.save(ontwerpRegelingDTO);
         } else {
             log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
                     ontwerpRegelingDTO.getIdentificatie(),
                     ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                     ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
+            ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
             savedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
         }
 
         return savedOntwerpRegelingDTO;
     }
 
-    private void oneToMany(OntwerpRegelingDTO ontwerpRegelingDTO) {
+    private OntwerpRegelingDTO oneToMany(OntwerpRegelingDTO ontwerpRegelingDTO) {
         // --- Handle BevoegdGezagDTO and SoortRegelingDTO (similar logic as before) ---
         if (ontwerpRegelingDTO.getAangeleverdDoorEen() != null) {
             Optional<BevoegdGezagDTO> optionalBevoegdGezagDTO = bevoegdGezagRepository.findByCode(ontwerpRegelingDTO.getAangeleverdDoorEen().getCode());
@@ -106,5 +108,6 @@ public class OntwerpRegelingDTOSaver {
             }
             ontwerpRegelingDTO.setType(managedSoortRegelingDTO);
         }
+        return ontwerpRegelingDTO;
     }
 }

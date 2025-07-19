@@ -15,7 +15,6 @@ public class RegelingHistoryController {
 
     private final OzonRegelingHistoryService ozonRegelingHistoryService;
 
-
     @GetMapping("/proces")
     public void getRegelingen() {
         ozonRegelingHistoryService.processAll();

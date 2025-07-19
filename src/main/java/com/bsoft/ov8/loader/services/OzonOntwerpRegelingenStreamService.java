@@ -79,6 +79,8 @@ public class OzonOntwerpRegelingenStreamService {
                 .flatMap(regelingenResponse -> { // 'regelingenResponse' is now of type Regelingen
                     if (regelingenResponse.getEmbedded() != null && regelingenResponse.getEmbedded().getOntwerpregelingen() != null) {
                         // Assuming RegelingenEmbedded has a getRegelingen() method that returns List<Regeling>
+                        log.info("regelingenResponse.getEmbedded(): {} regelingenResponse.getEmbedded().getOntwerpregelingen(): {}", regelingenResponse.getEmbedded(), regelingenResponse.getEmbedded().getOntwerpregelingen());
+                        log.info("ontwerpregelingen: {}", regelingenResponse.getEmbedded().getOntwerpregelingen().toString());
                         return Flux.fromIterable(regelingenResponse.getEmbedded().getOntwerpregelingen());
                     }
                     return Flux.empty();

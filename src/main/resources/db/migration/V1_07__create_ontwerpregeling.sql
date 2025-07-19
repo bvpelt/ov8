@@ -3,11 +3,11 @@ create table ontwerpregeling
     id                          bigint                   not null primary key,
     identificatie               text                     not null,
     officieletitel              text                     not null,
-    ontwerpbesluitidentificatie text,
+    ontwerpbesluitidentificatie text                     not null,
     besluitciteertitel          text,
-    technischid                 text,
+    technischid                 text                     not null,
     expressionid                text,
-    versie                      NUMERIC,
+    versie                      NUMERIC                  not null,
     tijdstipregistratie         TIMESTAMP WITH TIME ZONE not null,
     eindregistratie             TIMESTAMP WITH TIME ZONE,
     opschrift                   text,
@@ -19,14 +19,14 @@ create table ontwerpregeling
     publicatieID                text,
     bekendop                    text,
     ontvangenop                 text,
-    bevoegdgezag_id             bigint,
-    soortregeling_id            bigint
+    bevoegdgezag_id             bigint                   not null,
+    soortregeling_id            bigint                   not null
 );
 
 create index ontwerpregeling_identificatie_ix on ontwerpregeling (identificatie);
 create index ontwerpregeling_bevoegdgezag_ix on ontwerpregeling (bevoegdgezag_id);
 create index ontwerpregeling_soortregeling_ix on ontwerpregeling (soortregeling_id);
-create unique index ontwerpregeling_identificatie_versie on ontwerpregeling (identificatie, versie);
+create index ontwerpregeling_identificatie_versie on ontwerpregeling (identificatie, versie);
 create index ontwerpregeling_tijdstipregistratie_eindregistratie on ontwerpregeling (tijdstipregistratie, eindregistratie);
 
 ALTER TABLE ontwerpregeling

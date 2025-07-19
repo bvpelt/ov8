@@ -10,9 +10,9 @@ import java.io.Serializable;
 @Embeddable
 public class ProcedureverloopDTO implements Serializable {
 
-    @Column(name = "bekendOp")
+    @Column(name = "bekendop")
     private String bekendOp;
 
-    @Column(name = "ontvangenOp")
+    @Column(name = "ontvangenop")
     private String ontvangenOp;
 }
