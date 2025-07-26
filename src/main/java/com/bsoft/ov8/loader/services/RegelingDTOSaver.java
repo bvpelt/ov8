@@ -11,9 +11,9 @@ import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.EmbeddedLocatie;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
-import nl.overheid.omgevingswet.ozon.model.RegelingAllOfEmbedded;
+import nl.overheid.omgevingswet.ozon.presenteren.model.EmbeddedLocatie;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.RegelingAllOfEmbedded;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

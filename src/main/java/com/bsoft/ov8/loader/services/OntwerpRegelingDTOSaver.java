@@ -10,7 +10,7 @@ import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import com.bsoft.ov8.loader.repositories.OntwerpRegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.Ontwerpregeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregeling;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,0 +1,612 @@
+
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Geometrieën opvragen",
+    "version": "1.1.0",
+    "description": "De geometrieën opvragen API ontsluit alle in het DSO bekende geometrieën op basis van hun identificatie. De geometrie die hoort bij een bepaalde identificatie verandert nooit. Alle op te vragen resources zijn dan ook statisch.",
+    "contact": {
+      "name": "Kadaster DSO - Team Ozon",
+      "url": "https://aandeslagmetdeomgevingswet.nl/ontwikkelaarsportaal/services/contact/"
+    },
+    "termsOfService": "https://aandeslagmetdeomgevingswet.nl/ontwikkelaarsportaal/services/fair-use-policy/"
+  },
+  "externalDocs": {
+    "url": "https://aandeslagmetdeomgevingswet.nl/ontwikkelaarsportaal/api-register/api/omgevingsdocumenten-geometrie-opvragen/"
+  },
+  "servers": [
+    {
+      "url": "/publiek/omgevingsdocumenten/api/geometrieopvragen/v1",
+      "description": "De API op het huidige domein"
+    },
+    {
+      "url": "https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/geometrieopvragen/v1",
+      "description": "De API op de productieomgeving van het DSO"
+    },
+    {
+      "url": "https://service.pre.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/geometrieopvragen/v1",
+      "description": "De API op de pre-productie omgeving van het DSO"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Geometrieën",
+      "description": "Geometrieën uit (ontwerp-) omgevingsdocumenten en vergunningen"
+    },
+    {
+      "name": "Meta",
+      "description": "Operaties die niet domeinspecifiek zijn, maar over de applicatie gaan."
+    }
+  ],
+  "paths": {
+    "/crss": {
+      "get": {
+        "tags": [
+          "Geometrieën"
+        ],
+        "summary": "Ondersteunde CRS-en opvragen",
+        "description": "Deze API ondersteunt alleen de CRS-en die terugkomen op een request naar dit endpoint.\n",
+        "operationId": "getCrss",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRSs"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/geometrieen/{geometrieIdentificatie}": {
+      "get": {
+        "tags": [
+          "Geometrieën"
+        ],
+        "summary": "Een geometrie opvragen",
+        "description": "De geometrie met de gevraagde identificatie wordt uitgeleverd in GeoJson format.\n\nLet op: \n\n- Als er in een geometrie, zoals deze bij het DSO is aangeleverd, achterliggende nullen \n  (trailing zeros) in een coordinaat zitten, worden deze niet in de uitgeleverde GeoJson \n  meegenomen. Bijvoorbeeld `130000.400` zal in de GeoJson respons `130000.4` zijn.\n\n- Volgens de Geospatial Module van de Nederlandse API strategie is CRS84 de default CRS. \n  Deze API ondersteunt echter geen CRS84, dus zal een request zonder `crs` parameter \n  resulteren in een 422 respons. \n",
+        "operationId": "getGeometrie",
+        "parameters": [
+          {
+            "name": "geometrieIdentificatie",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "91edb05d-8a46-4aec-b600-6fa86777befc"
+          },
+          {
+            "name": "crs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "style": "form",
+            "explode": false,
+            "example": "http://www.opengis.net/def/crs/EPSG/0/28992"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJsonGeometry"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              },
+              "Content-Crs": {
+                "$ref": "#/components/headers/Content-Crs"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableContent"
+          }
+        }
+      }
+    },
+    "/app-health": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Health info",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app-info": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Applicatie info",
+        "operationId": "getInfo",
+        "responses": {
+          "200": {
+            "description": "Info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Info"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "getOpenApiJson",
+        "summary": "De OpenAPI specificatie in JSON-formaat",
+        "description": "Vraag de OpenAPI specificatie op in JSON formaat.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenApiSchemaJson"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.yaml": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "getOpenApiYaml",
+        "summary": "De API-specificatie in YAML-formaat",
+        "description": "Vraag de OpenAPI specificatie op in YAML formaat.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/yaml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenApiSchemaYaml"
+                }
+              }
+            },
+            "headers": {
+              "API-Version": {
+                "$ref": "#/components/headers/API-Version"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "headers": {
+      "Content-Crs": {
+        "description": "De CRS van de geometrie in de respons",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uri",
+          "example": "http://www.opengis.net/def/crs/EPSG/0/28992"
+        }
+      },
+      "API-Version": {
+        "description": "Versie van de API",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "1.0.0"
+        }
+      }
+    },
+    "schemas": {
+      "OpenApiSchemaYaml": {
+        "description": "Het YAML schema van de OpenAPI specificatie.",
+        "type": "object"
+      },
+      "OpenApiSchemaJson": {
+        "description": "Het JSON schema van de OpenAPI specificatie.",
+        "type": "object"
+      },
+      "CRSs": {
+        "title": "Ondersteunde CRS-en",
+        "description": "De URIs van alle in deze API ondersteunde CRS-en",
+        "type": "object",
+        "properties": {
+          "crs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "example": "http://www.opengis.net/def/crs/EPSG/0/28992"
+            }
+          }
+        }
+      },
+      "GeoJsonGeometry": {
+        "title": "GeoJSON Geometry",
+        "description": "Geometrie in GeoJSON formaat (RFC 7946).",
+        "externalDocs": {
+          "description": "RFC 7946 - The GeoJSON Format",
+          "url": "https://tools.ietf.org/html/rfc7946"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Point"
+          },
+          {
+            "$ref": "#/components/schemas/LineString"
+          },
+          {
+            "$ref": "#/components/schemas/Polygon"
+          },
+          {
+            "$ref": "#/components/schemas/MultiPoint"
+          },
+          {
+            "$ref": "#/components/schemas/MultiLineString"
+          },
+          {
+            "$ref": "#/components/schemas/MultiPolygon"
+          }
+        ]
+      },
+      "Point": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Point"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "LineString": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "LineString"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "Polygon": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Polygon"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MultiPoint": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "MultiPoint"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "MultiLineString": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "MultiLineString"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MultiPolygon": {
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "MultiPolygon"
+            ]
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 4,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Health": {
+        "description": "Health",
+        "type": "object",
+        "properties": {
+          "app-health": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "UP",
+                  "DOWN"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Info": {
+        "description": "Info",
+        "required": [
+          "app"
+        ],
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Problem": {
+        "description": "Standaardformaat (`application/problem+json`) voor probleemdetails in HTTP API's (RFC 7807).",
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URI dat het probleemtype identificeert.",
+            "default": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "description": "Een korte samenvatting van het probleemtype bedoeld voor ontwikkelaars."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "De HTTP statuscode gegenereerd door de server waar het probleem zich voordoet.",
+            "minimum": 100,
+            "maximum": 600,
+            "exclusiveMaximum": true,
+            "example": 403
+          },
+          "detail": {
+            "type": "string",
+            "description": "Mens-leesbare uitleg van dit specifieke probleem.",
+            "example": "Geen verbinding met de database"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URI dat dit specifieke probleem identificeert."
+          }
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "UnprocessableContent": {
+        "description": "Unprocessable content",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "description": "De API-key die je hebt aangevraagd op het ontwikkelaarsportaal \n(https://aandeslagmetdeomgevingswet.nl/ontwikkelaarsportaal/formulieren/api-key-aanvragen-0/) \ndient bij elke request naar de API via de `x-api-key` request header meegestuurd te worden. \nIndien deze niet juist wordt meegestuurd, of het een ongeldige key betreft, zul je de\nfoutmelding `403 Forbidden` terugkrijgen.\n",
+        "in": "header",
+        "name": "x-api-key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
+}

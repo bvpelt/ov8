@@ -1,7 +1,7 @@
 package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.RegistratiegegevensDTO;
-import nl.overheid.omgevingswet.ozon.model.Registratiegegevens;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Registratiegegevens;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;

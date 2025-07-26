@@ -1,7 +1,7 @@
 package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
-import nl.overheid.omgevingswet.ozon.model.BevoegdGezag;
+import nl.overheid.omgevingswet.ozon.presenteren.model.BevoegdGezag;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

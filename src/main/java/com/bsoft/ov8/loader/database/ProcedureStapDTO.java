@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "code")
+//@EqualsAndHashCode(of = "code")
 //@ToString(exclude = "regelingen")
 @Entity
 @Table(name = "procedurestap", schema = "public", catalog = "ov8")

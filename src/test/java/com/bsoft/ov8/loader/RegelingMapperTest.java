@@ -5,12 +5,13 @@ import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.*;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import jakarta.transaction.Transactional;
-import nl.overheid.omgevingswet.ozon.model.BevoegdGezag;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
+
+import nl.overheid.omgevingswet.ozon.presenteren.model.BevoegdGezag;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.net.URI;
@@ -32,7 +33,7 @@ public class RegelingMapperTest {
     @Autowired
     private RegelingMapper regelingMapper;
 
-    @MockBean
+    @MockitoBean
     private RegelingRepository regelingRepository;
 
     @Autowired

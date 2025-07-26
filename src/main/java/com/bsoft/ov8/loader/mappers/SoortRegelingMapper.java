@@ -1,7 +1,7 @@
 package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.SoortRegelingDTO;
-import nl.overheid.omgevingswet.ozon.model.SoortRegeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.SoortRegeling;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

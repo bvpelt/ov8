@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "code")
-@ToString(exclude = "procedurestappen")
+@ToString(exclude = "procdurestappen")
 @Entity
 @Table(name = "soortstap", schema = "public", catalog = "ov8")
 public class SoortStapDTO implements Serializable {

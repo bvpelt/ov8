@@ -1,7 +1,7 @@
 package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;
-import nl.overheid.omgevingswet.ozon.model.Ontwerpregeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregeling;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

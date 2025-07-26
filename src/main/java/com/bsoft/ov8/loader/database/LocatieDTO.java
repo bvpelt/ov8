@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import nl.overheid.omgevingswet.ozon.model.LocatieType;
+import nl.overheid.omgevingswet.ozon.presenteren.model.LocatieType;
 
 import java.io.Serial;
 import java.io.Serializable;

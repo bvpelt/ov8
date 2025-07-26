@@ -2,7 +2,7 @@ package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

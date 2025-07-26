@@ -5,7 +5,7 @@ import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.model.Regeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;

@@ -25,11 +25,11 @@ import java.util.List;
 @RequestMapping("/stream")
 @RequiredArgsConstructor // Lombok for constructor injection
 @Slf4j
-public class OntRegstreamController {
+public class GeoDownloadController {
 
     private final OzonOntwerpRegelingenStreamService ozonOntwerpRegelingenStreamService;
 
-    @GetMapping("/procesontwerp")
+    @GetMapping("/downloadgeo")
     Flux<Ontwerpregeling> getOntwerpRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
             @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
@@ -48,7 +48,7 @@ public class OntRegstreamController {
                 null);
     }
 
-    @GetMapping("/saveontwerp")
+    @GetMapping("/savegeo")
     public void saveOntwerpRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
             @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
