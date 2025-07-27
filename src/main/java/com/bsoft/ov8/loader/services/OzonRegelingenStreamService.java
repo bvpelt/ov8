@@ -28,7 +28,7 @@ public class OzonRegelingenStreamService {
     private final RegelingMapper regelingMapper;
     private final RegelingDTOSaver regelingDTOSaver;
 
-    @Value("${api.ozon.base-url}")
+    @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
     public OzonRegelingenStreamService(WebClient webClient,

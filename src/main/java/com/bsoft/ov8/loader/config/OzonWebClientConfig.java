@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class OzonWebClientConfig {
 
-    @Value("${api.ozon.base-url}")
+    @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
     @Value("${api.ozon.api-key}") // New property for the API key

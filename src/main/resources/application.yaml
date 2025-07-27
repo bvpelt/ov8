@@ -105,5 +105,9 @@ management:
 
 api:
   ozon:
-    base-url: ${OZON_BASE_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8}
     api-key: ${OZON_API_KEY:8b9b4c2f-81a8-490a-acf4-82d82c77beee} # Replace with your actual API key
+    presenteren:
+      base-url: ${OZON_BASE_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8}
+    download:
+      base-url: ${OZON_BASE_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/geometrieopvragen/v1}
+      epsg28992: http://www.opengis.net/def/crs/EPSG/0/28992

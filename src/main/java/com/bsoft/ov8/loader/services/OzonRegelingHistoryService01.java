@@ -25,7 +25,7 @@ public class OzonRegelingHistoryService01 {
     private final RegelingRepository regelingRepository;
     private final RegelingMapper regelingMapper;
 
-    @Value("${api.ozon.base-url}")
+    @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
     public OzonRegelingHistoryService01(OzonRegelingenClient ozonRegelingenClient,

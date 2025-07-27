@@ -32,6 +32,7 @@ public class SoortStapDTO implements Serializable {
     private String waarde;
 
     @OneToMany(mappedBy = "soortStap", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<ProcedureStapDTO> procdurestappen = new HashSet<>(); // Can be named something like 'regelingenUsingThisBevoegdGezag'
 
 }

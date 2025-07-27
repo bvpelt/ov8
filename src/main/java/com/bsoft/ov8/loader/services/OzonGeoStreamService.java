@@ -21,18 +21,21 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class OzonOntwerpRegelingenStreamService {
+public class OzonGeoStreamService {
 
     private final WebClient webClient;
     private final OntwerpRegelingMapper ontwerpRegelingMapper;
     private final OntwerpRegelingDTOSaver ontwerpRegelingDTOSaver;
 
-    @Value("${api.ozon.presenteren.base-url}")
+    @Value("${api.ozon.download.base-url}")
     private String ozonBaseUrl;
 
-    public OzonOntwerpRegelingenStreamService(WebClient webClient,
-                                              OntwerpRegelingDTOSaver ontwerpRegelingDTOSaver,
-                                              OntwerpRegelingMapper ontwerpRegelingMapper
+    @Value("${api.ozon.download.epsg28992}")
+    private String epsg28992;
+
+    public OzonGeoStreamService(WebClient webClient,
+                                OntwerpRegelingDTOSaver ontwerpRegelingDTOSaver,
+                                OntwerpRegelingMapper ontwerpRegelingMapper
 
     ) {
         this.webClient = webClient;
@@ -50,7 +53,7 @@ public class OzonOntwerpRegelingenStreamService {
      * @param fields        Optional fields to include.
      * @return A Flux of all Regelingen across all pages.
      */
-    public Flux<Ontwerpregeling> getAllOntwerpRegelingen(
+    public Flux<Ontwerpregeling> getAllLocations(
             OffsetDateTime beschikbaarOp,
             Boolean _expand,
             Integer initialPage,
@@ -59,12 +62,7 @@ public class OzonOntwerpRegelingenStreamService {
             String fields
     ) {
         String initialUri = buildInitialUri(
-                beschikbaarOp,
-                _expand,
-                initialPage,
-                size,
-                sort,
-                fields
+                geoIdentificatie
         );
 
         return fetchPage(initialUri) // Use the helper method here
@@ -102,20 +100,16 @@ public class OzonOntwerpRegelingenStreamService {
      * Helper method to build the initial URI with query parameters.
      */
     private String buildInitialUri(
-            OffsetDateTime beschikbaarOp,
-            Boolean _expand,
-            Integer page,
-            Integer size,
-            List<OntwerpregelingenSort> sort,
-            String fields
+            String geoIdentificatie
     ) {
         // Define the base URL for the external service
         String baseUrl = ozonBaseUrl;
+        String CRS = epsg28992;
 
         // Use UriComponentsBuilder directly to construct the URI
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
-                .path("/ontwerpregelingen")
-                .queryParam("beschikbaarOp", beschikbaarOp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                .path("/geometrieen/" + geoIdentificatie)
+                .queryParam("crs", epsg28992);
 
         // Add optional parameters using queryParamIfPresent for robustness
         Optional.ofNullable(page).ifPresent(val -> uriBuilder.queryParam("page", val));
@@ -146,7 +140,7 @@ public class OzonOntwerpRegelingenStreamService {
     ) {
         final long start = System.currentTimeMillis();
 
-        getAllOntwerpRegelingen(beschikbaarOp, _expand, initialPage, size, sort, fields)
+        getAllLocations(beschikbaarOp, _expand, initialPage, size, sort, fields)
                 .doOnNext(ontwerpregeling -> {
                     log.debug("Processing ontwerpregeling {}", ontwerpregeling.getIdentificatie());
                     OntwerpRegelingDTO ontwerpRegelingDTO = ontwerpRegelingMapper.toOntwerpRegelingDTO(ontwerpregeling);
