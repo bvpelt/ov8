@@ -1,6 +1,8 @@
 package com.bsoft.ov8.loader.controller;
 
+import com.bsoft.ov8.loader.services.OzonGeoDownloadService;
 import com.bsoft.ov8.loader.services.OzonOntwerpRegelingenStreamService;
+import com.bsoft.ov8.loader.services.OzonRegelingHistoryService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
@@ -22,52 +24,15 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stream")
+@RequestMapping("/geo")
 @RequiredArgsConstructor // Lombok for constructor injection
 @Slf4j
 public class GeoDownloadController {
 
-    private final OzonOntwerpRegelingenStreamService ozonOntwerpRegelingenStreamService;
+    private final OzonGeoDownloadService ozonGeoDownloadService;
 
-    @GetMapping("/downloadgeo")
-    Flux<Ontwerpregeling> getOntwerpRegelingen(
-            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
-    ) {
-        List<OntwerpregelingenSort> sort = List.of(OntwerpregelingenSort.REGISTRATIETIJDSTIP);
-        LocalDate geldigOp = LocalDate.now();
-        OffsetDateTime beschikbaarOp = OffsetDateTime.now(ZoneOffset.UTC);
-
-
-        return ozonOntwerpRegelingenStreamService.getAllOntwerpRegelingen(
-                beschikbaarOp,
-                true,
-                null,
-                null,
-                sort,
-                null);
-    }
-
-    @GetMapping("/savegeo")
-    public void saveOntwerpRegelingen(
-            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
-    ) {
-        List<OntwerpregelingenSort> sort = List.of(OntwerpregelingenSort.REGISTRATIETIJDSTIP);
-        OffsetDateTime beschikbaarOp = OffsetDateTime.now(ZoneOffset.UTC);
-
-        long start = System.currentTimeMillis();
-
-        ozonOntwerpRegelingenStreamService.procesAll(
-                beschikbaarOp,
-                true,
-                null,
-                null,
-                sort,
-                null
-        );
-        long end = System.currentTimeMillis();
-
-        log.info("Processing time: {} ms", end - start);
+    @GetMapping("/download")
+    public void getGeometries() {
+        ozonGeoDownloadService.processAll();
     }
 }
