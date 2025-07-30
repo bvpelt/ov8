@@ -3,8 +3,11 @@ package com.bsoft.ov8.loader.services;
 import com.bsoft.ov8.loader.database.GeometryDTO;
 import com.bsoft.ov8.loader.repositories.GeometryRepository;
 import com.bsoft.ov8.loader.repositories.LocatieRepository;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.geodownload.model.GeoJsonGeometry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,6 +30,9 @@ public class OzonGeoDownloadService {
 
     @Value("${api.ozon.download.epsg28992}")
     private String epsg28992;
+
+    @Value("${api.ozon.api-key}")
+    private String x_api_key;
 
     public OzonGeoDownloadService(WebClient webClient,
                                   LocatieRepository locatieRepository,
@@ -82,11 +88,12 @@ public class OzonGeoDownloadService {
         log.info("Processing geometry identification: {}", geometrieIdentificatie);
 
         return fetchGeometrieFromApi(geometrieIdentificatie)
-                .flatMap(geoJsonGeometry -> {
-                    // Convert GeoJsonGeometry to JTS Geometry
+                .flatMap(concreteGeometry -> {
+                    // Convert ConcreteGeoJsonGeometry to JTS Geometry
                     try {
+                        // Use the toString() method which returns proper GeoJSON
                         org.locationtech.jts.geom.Geometry jtsGeometry =
-                                geometryConverter.convertGeoJsonToJtsGeometry(geoJsonGeometry.toString());
+                                geometryConverter.convertGeoJsonToJtsGeometry(concreteGeometry.toString());
 
                         if (jtsGeometry == null) {
                             log.warn("Failed to convert GeoJSON to JTS Geometry for: {}", geometrieIdentificatie);
@@ -134,8 +141,9 @@ public class OzonGeoDownloadService {
 
     /**
      * Makes a reactive API call to retrieve a Geometrie from the external download service.
+     * Now returns ConcreteGeoJsonGeometry instead of the abstract GeoJsonGeometry
      */
-    private Mono<GeoJsonGeometry> fetchGeometrieFromApi(String geometrieIdentificatie) {
+    private Mono<ConcreteGeoJsonGeometry> fetchGeometrieFromApi(String geometrieIdentificatie) {
         log.info("Fetching geometry from API - ID: {}, CRS: {}", geometrieIdentificatie, epsg28992);
 
         String apiPath = String.format("/geometrieen/%s", geometrieIdentificatie);
@@ -148,13 +156,68 @@ public class OzonGeoDownloadService {
 
         return webClient.get()
                 .uri(uri)
+                .headers(httpHeaders -> {
+                    httpHeaders.set("x-api-key", x_api_key);
+                    httpHeaders.set("Accept", "application/json");
+                })
                 .retrieve()
-                .bodyToMono(GeoJsonGeometry.class)
+                .bodyToMono(String.class)
+                .map(this::parseJsonToConcreteGeometry)
                 .doOnSuccess(geometry -> log.debug("Successfully fetched geometry for: {}", geometrieIdentificatie))
                 .doOnError(e -> log.error("API call error for {}: {}", geometrieIdentificatie, e.getMessage()))
                 .onErrorResume(e -> {
                     log.error("Failed to fetch geometry for {}: {}", geometrieIdentificatie, e.getMessage());
                     return Mono.empty();
                 });
+    }
+
+    private ConcreteGeoJsonGeometry parseJsonToConcreteGeometry(String jsonString) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return objectMapper.readValue(jsonString, ConcreteGeoJsonGeometry.class);
+        } catch (Exception e) {
+            log.error("Failed to parse JSON: {}", e.getMessage());
+            throw new RuntimeException("JSON parsing failed", e);
+        }
+    }
+
+    // Define ConcreteGeoJsonGeometry as inner class or separate class
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ConcreteGeoJsonGeometry {
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("coordinates")
+        private Object coordinates;
+
+        public ConcreteGeoJsonGeometry() {
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public Object getCoordinates() {
+            return coordinates;
+        }
+
+        public void setCoordinates(Object coordinates) {
+            this.coordinates = coordinates;
+        }
+
+        @Override
+        public String toString() {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                return mapper.writeValueAsString(this);
+            } catch (Exception e) {
+                return String.format("{\"type\":\"%s\",\"coordinates\":%s}", type, coordinates);
+            }
+        }
     }
 }

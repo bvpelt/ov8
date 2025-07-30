@@ -79,3 +79,7 @@ from
      from ontwerpregeling
      group by publicatieid)
 order by aantal desc;
+
+-- oppervlakte voor locaties
+select l.noemer, ST_AREA(g.geometrie)/1000000 from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null order by l.noemer;
+
