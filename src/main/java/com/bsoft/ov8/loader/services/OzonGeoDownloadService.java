@@ -1,9 +1,12 @@
 package com.bsoft.ov8.loader.services;
 
+import com.bsoft.ov8.loader.database.GeometryDTO;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
-import com.bsoft.ov8.loader.repositories.RegelingRepository;
+import com.bsoft.ov8.loader.repositories.GeometryRepository;
+import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import lombok.extern.slf4j.Slf4j;
+import nl.overheid.omgevingswet.ozon.geodownload.model.GeoJsonGeometry;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,9 +24,8 @@ import java.time.OffsetDateTime;
 public class OzonGeoDownloadService {
 
     private final WebClient webClient;
-    private final RegelingRepository regelingRepository;
-    private final RegelingMapper regelingMapper;
-    private final RegelingDTOSaver regelingDTOSaver;
+    private final LocatieRepository locatieRepository;
+    private final GeometryRepository geometryRepository;
 
     @Value("${api.ozon.download.base-url.base-url}")
     private String ozonBaseUrl;
@@ -32,13 +34,11 @@ public class OzonGeoDownloadService {
     private String epsg28992;
 
     public OzonGeoDownloadService(WebClient webClient,
-                                  RegelingRepository regelingRepository,
-                                  RegelingMapper regelingMapper,
-                                  RegelingDTOSaver regelingDTOSaver) {
+                                  LocatieRepository locatieRepository,
+                                  GeometryRepository geometryRepository) {
         this.webClient = webClient;
-        this.regelingRepository = regelingRepository;
-        this.regelingMapper = regelingMapper;
-        this.regelingDTOSaver = regelingDTOSaver;
+        this.locatieRepository = locatieRepository;
+        this.geometryRepository = geometryRepository;
     }
 
     /**
@@ -46,10 +46,10 @@ public class OzonGeoDownloadService {
      */
     public void processAll() {
         final long start = System.currentTimeMillis();
-        retrieveAndSaveHistoricalRegelingen()
+        retrieveAndSaveGeometrien()
                 .blockLast(); // Block to ensure completion
 
-        log.info("Duration: " + (System.currentTimeMillis() - start));
+        log.info("Duration: {} ", (System.currentTimeMillis() - start));
     }
 
     /**
@@ -58,12 +58,12 @@ public class OzonGeoDownloadService {
      *
      * @return A Flux of RegelingDTOs that were successfully fetched and saved.
      */
-    public Flux<RegelingDTO> retrieveAndSaveHistoricalRegelingen() {
-        return Mono.fromCallable(() -> regelingRepository.findByVersieGreaterThan(1))
+    public Flux<RegelingDTO> retrieveAndSaveGeometrien() {
+        return Mono.fromCallable(() -> locatieRepository.findNewGeometry())
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
                 // KEY CHANGE: Use concatMap instead of flatMap for sequential processing
-                .concatMap(this::processRegelingSequentially)
+                .concatMap(this::processGeometrieIdentificatieSequentially)
                 .onErrorContinue((throwable, obj) -> {
                     log.error("Error processing regeling: {}, error: {}", obj, throwable.getMessage());
                 });
@@ -72,33 +72,12 @@ public class OzonGeoDownloadService {
     /**
      * Process a single regeling and all its historical versions sequentially
      */
-    private Flux<RegelingDTO> processRegelingSequentially(RegelingDTO dbRegelingDTO) {
-        log.info("0001 - Processing regeling: {}", dbRegelingDTO.toString());
-
-        String uriIdentifier = dbRegelingDTO.getIdentificatie().replace("/", "_");
-
-        // Calculate the dates for the previous version
-        LocalDate finalGeldigOpDate = null;
-        LocalDate finalInwerkingOpDate = null;
-
-        if (dbRegelingDTO.getRegistratiegegevens() != null) {
-            finalGeldigOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid() != null) ?
-                    dbRegelingDTO.getRegistratiegegevens().getBeginGeldigheid().minusDays(1) : null;
-            finalInwerkingOpDate = (dbRegelingDTO.getRegistratiegegevens().getBeginInwerking() != null) ?
-                    dbRegelingDTO.getRegistratiegegevens().getBeginInwerking().minusDays(1) : null;
-        }
-
-        if (finalGeldigOpDate == null || finalInwerkingOpDate == null) {
-            log.info("0002 - Skipping regeling {} due to missing dates.", dbRegelingDTO.getIdentificatie());
-            return Flux.empty();
-        }
+    private Flux<RegelingDTO> processGeometrieIdentificatieSequentially(String geometrieIdentificatie) {
+        log.info("0001 - Processing geometrie: {}", geometrieIdentificatie);
 
         // Process all historical versions for this regeling sequentially
         return processHistoricalVersionsSequentially(
-                uriIdentifier,
-                dbRegelingDTO.getRegistratiegegevens().getVersie().intValue(),
-                finalGeldigOpDate,
-                finalInwerkingOpDate
+                geometrieIdentificatie
         );
     }
 
@@ -106,159 +85,52 @@ public class OzonGeoDownloadService {
      * Recursively fetch and save all historical versions sequentially
      */
     private Flux<RegelingDTO> processHistoricalVersionsSequentially(
-            String uriIdentifier,
-            Integer currentVersion,
-            LocalDate geldigOpDate,
-            LocalDate inwerkingOpDate) {
+            String geometrieIdentificatie) {
 
-        log.info("0003 - processHistoricalVersionsSequentially version: {}, geldigOp: {}, inwerkingOp: {}, uri: {}", currentVersion, geldigOpDate, inwerkingOpDate, uriIdentifier);
+        log.info("0003 - processHistoricalVersionsSequentially geometrieIdentificatie: {}", geometrieIdentificatie);
 
-        if (currentVersion <= 1) {
-            // Base case: no more versions to process
-            return Flux.empty();
-        }
+        return fetchGeometrieFromApi(geometrieIdentificatie)
+                .doOnSuccess(geoJsonGeometry -> {
+                    //
+                    // Convert GeoJsonGeometry to Geometry
+                    //
 
-        log.info("0004 - Fetching historical version for {}, geldigOp: {}, inwerkingOp: {}",
-                uriIdentifier, geldigOpDate, inwerkingOpDate);
+                    //
+                    // Save Geometry
+                    //
+                    GeometryDTO geometryDTO = new GeometryDTO();
+                    geometryDTO.setGeoid(geometrieIdentificatie);
 
-        return fetchRegelingFromApi(uriIdentifier, geldigOpDate, inwerkingOpDate)
-                .flatMap(apiRegeling -> {
-                    log.info("0006 - Found historical version: {}", apiRegeling);
-
-                    // Convert and save this version
-                    RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
-                    newRegelingDTO.setId(null); // Ensure new entity
-
-                    return Mono.fromCallable(() -> {
-                                // Check if this version already exists
-                                String identificatie = newRegelingDTO.getIdentificatie();
-                                LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
-                                OffsetDateTime registratieMoment = newRegelingDTO.getRegistratiegegevens().getTijdstipRegistratie();
-
-                                boolean exists = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
-                                        identificatie, registratieMoment, beginGeldigheid).isPresent();
-
-                                if (exists) {
-                                    log.info("0007 - Version already exists, skipping save for {}", identificatie);
-                                    return null; // Skip saving
-                                }
-
-                                RegelingDTO savedRegeling = regelingDTOSaver.saveRegeling(newRegelingDTO, apiRegeling);
-
-                                log.info("0008 - Saved regeling id: {} identificatie: {} versie: {}",
-                                        savedRegeling.getId(),
-                                        savedRegeling.getIdentificatie(),
-                                        savedRegeling.getRegistratiegegevens().getVersie());
-                                return savedRegeling;
-                            })
-                            .subscribeOn(Schedulers.boundedElastic());
                 })
-                .cast(RegelingDTO.class)
-                .flux()
-                .filter(dto -> dto != null) // Filter out null results from skipped saves
-                .concatWith(
-                        // SEQUENTIAL RECURSION: Process next historical version
-                        Flux.defer(() -> {
-                            // Calculate dates for the next (older) version
-                            LocalDate nextGeldigOpDate = geldigOpDate.minusDays(1);
-                            LocalDate nextInwerkingOpDate = inwerkingOpDate.minusDays(1);
 
 
-                            return processHistoricalVersionsSequentially(
-                                    uriIdentifier,
-                                    currentVersion - 1,
-                                    nextGeldigOpDate,
-                                    nextInwerkingOpDate
-                            );
-                        })
-                )
                 .onErrorResume(e -> {
-                    log.error("0007 Error processing historical version for {} at geldigOp {} , inwerkingOp {} : {}",
-                            uriIdentifier, geldigOpDate, inwerkingOpDate, e.getMessage());
+                    log.error("0007 Error processing geometryIdentification {}, error: {}",
+                            geometrieIdentificatie, e.getMessage());
                     return Flux.empty();
                 });
     }
 
     /**
-     * Alternative approach: Process all versions using an iterative approach instead of recursion
+     * Makes a reactive API call to retrieve a Geometrie from the external download service.
      */
-    private Flux<RegelingDTO> processHistoricalVersionsIteratively(
-            String uriIdentifier,
-            Integer maxVersion,
-            LocalDate initialGeldigOpDate,
-            LocalDate initialInwerkingOpDate) {
+    private Mono<GeoJsonGeometry> fetchGeometrieFromApi(String geometrieIdentificatie) {
 
-        return Flux.range(1, maxVersion - 1) // Generate versions from 1 to maxVersion-1
-                .map(versionOffset -> maxVersion - versionOffset) // Process from highest to lowest
-                .concatMap(version -> {
-                    // Calculate dates for this version
-                    LocalDate geldigOpDate = initialGeldigOpDate.minusDays(maxVersion - version);
-                    LocalDate inwerkingOpDate = initialInwerkingOpDate.minusDays(maxVersion - version);
+        log.info("0005 - fetchGeometrieFromApi geometrieIdentificatie: {}, crs: {}", geometrieIdentificatie, epsg28992);
 
-                    return fetchRegelingFromApi(uriIdentifier, geldigOpDate, inwerkingOpDate)
-                            .flatMap(apiRegeling -> {
-                                RegelingDTO newRegelingDTO = convertToRegelingDTO(apiRegeling);
-                                newRegelingDTO.setId(null);
-
-                                return Mono.fromCallable(() -> {
-                                            String identificatie = newRegelingDTO.getIdentificatie();
-                                            LocalDate beginGeldigheid = newRegelingDTO.getRegistratiegegevens().getBeginGeldigheid();
-                                            OffsetDateTime registratieMoment = newRegelingDTO.getRegistratiegegevens().getTijdstipRegistratie();
-
-                                            boolean exists = regelingRepository.findByIdentificatieAndTijdstipregistratieAndBegingeldigheid(
-                                                    identificatie, registratieMoment, beginGeldigheid).isPresent();
-
-                                            if (exists) {
-                                                log.info("Version already exists, skipping save for {}", identificatie);
-                                                return null;
-                                            }
-
-                                            RegelingDTO savedRegeling = regelingRepository.save(newRegelingDTO);
-                                            log.info("Saved regeling {} identificatie: {} versie: {}",
-                                                    savedRegeling.getId(),
-                                                    savedRegeling.getIdentificatie(),
-                                                    savedRegeling.getRegistratiegegevens().getVersie());
-                                            return savedRegeling;
-                                        })
-                                        .subscribeOn(Schedulers.boundedElastic());
-                            })
-                            .cast(RegelingDTO.class)
-                            .flux()
-                            .filter(dto -> dto != null)
-                            .onErrorResume(e -> {
-                                log.error("Error processing version {} for {}: {}",
-                                        version, uriIdentifier, e.getMessage());
-                                return Flux.empty();
-                            });
-                });
-    }
-
-    private RegelingDTO convertToRegelingDTO(Regeling apiRegeling) {
-        return regelingMapper.toRegelingDTO(apiRegeling);
-    }
-
-    /**
-     * Makes a reactive API call to retrieve a Regeling from the external service.
-     */
-    private Mono<Regeling> fetchRegelingFromApi(String uriIdentifier, LocalDate geldigOpDate, LocalDate inwerkingOpDate) {
-
-        log.info("0005 - fetchRegelingFromApi geldigOp: {}, inwerkingOp: {}, uri: {}", geldigOpDate, inwerkingOpDate, uriIdentifier);
-
-        String apiPath = String.format("/regelingen/%s", uriIdentifier);
+        String apiPath = String.format("/geometrieen/%s", geometrieIdentificatie);
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ozonBaseUrl)
                 .path(apiPath)
-                .queryParam("geldigOp", geldigOpDate.toString())
-                .queryParam("inWerkingOp", inwerkingOpDate.toString())
-                .queryParam("_expand", true);
+                .queryParam("crs", epsg28992);
 
         String uri = uriBuilder.build().toUriString();
 
         return webClient.get()
                 .uri(uri)
                 .retrieve()
-                .bodyToMono(Regeling.class)
-                .doOnError(e -> log.error("API call error for {}: {}", uriIdentifier, e.getMessage()))
+                .bodyToMono(GeoJsonGeometry.class)
+                .doOnError(e -> log.error("API call error for {}: {}", geometrieIdentificatie, e.getMessage()))
                 .onErrorResume(e -> Mono.empty());
     }
 }
