@@ -1,7 +1,6 @@
 package com.bsoft.ov8.loader.repositories;
 
 import com.bsoft.ov8.loader.database.LocatieDTO;
-import com.bsoft.ov8.loader.database.RegelingDTO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
