@@ -83,3 +83,24 @@ order by aantal desc;
 -- oppervlakte voor locaties
 select l.noemer, ST_AREA(g.geometrie)/1000000 from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null order by l.noemer;
 
+-- show geometrie
+-- as string
+select geoid, ST_AsText(geometrie) from geo where id = 1;
+select geoid, geometrie from geo where id = 1;
+
+select geoid, ST_NRings(geometrie)
+from geo
+where ST_GeometryType(geometrie) = 'ST_MultiPolygon'
+order by ST_NRings(geometrie) DESC;
+
+select noemer, geoid, ST_NRings(geometrie), ST_Area(geometrie) /1000000
+from geo, locatie
+where ST_GeometryType(geometrie) = 'ST_MultiPolygon' AND
+    geoid = geometrieidentificatie
+order by ST_NRings(geometrie) DESC;
+
+-- welke geometrieen overlappen
+select g1.id, g2.id
+from geo g1, geo g2
+where g1.id <> g2.id and ST_Intersects(g1.geometrie, g2.geometrie)
+order by g1.id, g2.id;
