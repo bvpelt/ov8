@@ -34,8 +34,6 @@ logging:
 spring:
   application:
     name: '@project.name@'
-  main:
-    banner-mode: 'off'
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ov8}
@@ -57,6 +55,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  main:
+    banner-mode: 'off'
+
 info:
   project:
     name: ${spring.application.name}

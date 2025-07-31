@@ -40,3 +40,33 @@ CREATE SCHEMA postgis;
 CREATE EXTENSION postgis SCHEMA postgis;
 SELECT postgis_full_version();
 ```
+
+# Running
+After building app
+
+```
+# Save all regelingen
+http://localhost:8080/stream/save
+
+# Get history for known regelingen
+http://localhost:8080/history/proces
+
+# Get ontwerp regelingen
+http://localhost:8080/stream/saveontwerp
+
+# Get geometrieen
+http://localhost:8080/geo/download
+
+select count(*) from regeling;
+--- # 1 1480 REGELINGEN
+--- # 2 1972 REGELINGEN
+
+select count(*) from ontwerpregeling;
+--- # 1  430 ONTWERPREGELINGEN
+
+select count(*) from locatie;
+--- # 1 1983 locaties
+
+select count(*) from geo;
+--- # 1 1006
+```
