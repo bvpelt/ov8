@@ -1,4 +1,4 @@
-package com.bsoft.ov8.loader.services;// Or wherever you want to place this utility
+package com.bsoft.ov8.loader.utils;// Or wherever you want to place this utility
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -2,6 +2,7 @@ package com.bsoft.ov8.loader.services;
 
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
+import com.bsoft.ov8.loader.utils.RegelingDTOSaver;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regelingen;
@@ -32,7 +33,7 @@ public class OzonRegelingenStreamService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonRegelingenStreamService(@Qualifier("ozonWebClient") WebClient webClient,
+    public OzonRegelingenStreamService(@Qualifier("ozonRegelingenWebClient") WebClient webClient,
                                        RegelingDTOSaver regelingDTOSaver,
                                        RegelingMapper regelingMapper
 

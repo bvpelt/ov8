@@ -3,11 +3,13 @@ package com.bsoft.ov8.loader.services;
 import com.bsoft.ov8.loader.database.GeometryDTO;
 import com.bsoft.ov8.loader.repositories.GeometryRepository;
 import com.bsoft.ov8.loader.repositories.LocatieRepository;
+import com.bsoft.ov8.loader.utils.GeometryConverter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -34,7 +36,7 @@ public class OzonGeoDownloadService {
     @Value("${api.ozon.api-key}")
     private String x_api_key;
 
-    public OzonGeoDownloadService(WebClient webClient,
+    public OzonGeoDownloadService(@Qualifier("ozonGeoDownloadWebClient") WebClient webClient,
                                   LocatieRepository locatieRepository,
                                   GeometryRepository geometryRepository,
                                   GeometryConverter geometryConverter) {
@@ -157,7 +159,7 @@ public class OzonGeoDownloadService {
         return webClient.get()
                 .uri(uri)
                 .headers(httpHeaders -> {
-                    httpHeaders.set("x-api-key", x_api_key);
+   //                 httpHeaders.set("x-api-key", x_api_key);
                     httpHeaders.set("Accept", "application/json");
                 })
                 .retrieve()

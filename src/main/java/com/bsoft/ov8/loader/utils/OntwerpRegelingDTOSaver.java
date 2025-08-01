@@ -1,4 +1,4 @@
-package com.bsoft.ov8.loader.services;
+package com.bsoft.ov8.loader.utils;
 
 import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
 import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;

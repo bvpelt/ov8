@@ -3,6 +3,7 @@ package com.bsoft.ov8.loader.services;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
+import com.bsoft.ov8.loader.utils.RegelingDTOSaver;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,7 +30,7 @@ public class OzonRegelingHistoryService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonRegelingHistoryService(@Qualifier("ozonWebClient") WebClient webClient,
+    public OzonRegelingHistoryService(@Qualifier("ozonRegelingenWebClient") WebClient webClient,
                                       RegelingRepository regelingRepository,
                                       RegelingMapper regelingMapper,
                                       RegelingDTOSaver regelingDTOSaver) {
