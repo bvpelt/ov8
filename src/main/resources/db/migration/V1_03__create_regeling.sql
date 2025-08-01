@@ -24,7 +24,7 @@ create table regeling
 create index regeling_identificatie_ix on regeling (identificatie);
 create index regeling_bevoegdgezag_ix on regeling (bevoegdgezag_id);
 create index regeling_soortregeling_ix on regeling (soortregeling_id);
-create unique index regeling_identificatie_versie on regeling (identificatie, versie);
+create index regeling_identificatie_versie on regeling (identificatie, versie);
 create index regeling_beginGeldigheid_eindgeldigheid on regeling (beginGeldigheid, eindGeldigheid);
 
 ALTER TABLE regeling

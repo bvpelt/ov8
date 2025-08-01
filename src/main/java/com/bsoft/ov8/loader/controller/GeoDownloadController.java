@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/geo")
+@RequestMapping("/save")
 @RequiredArgsConstructor // Lombok for constructor injection
 @Slf4j
 public class GeoDownloadController {
 
     private final OzonGeoDownloadService ozonGeoDownloadService;
 
-    @GetMapping("/download")
+    @GetMapping("/geometrie")
     public void getGeometries() {
         ozonGeoDownloadService.processAll();
     }

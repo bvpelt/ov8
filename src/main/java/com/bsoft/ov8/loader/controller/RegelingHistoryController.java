@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/history")
+@RequestMapping("/save")
 @RequiredArgsConstructor // Lombok for constructor injection
 @Slf4j
 public class RegelingHistoryController {
 
     private final OzonRegelingHistoryService ozonRegelingHistoryService;
 
-    @GetMapping("/proces")
+    @GetMapping("/regelingenhistorie")
     public void getRegelingen() {
         ozonRegelingHistoryService.processAll();
     }

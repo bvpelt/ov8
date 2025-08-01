@@ -31,7 +31,7 @@ public class OzonOntwerpRegelingenStreamService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonOntwerpRegelingenStreamService(@Qualifier("ozonWebClient")WebClient webClient,
+    public OzonOntwerpRegelingenStreamService(@Qualifier("ozonWebClient") WebClient webClient,
                                               OntwerpRegelingDTOSaver ontwerpRegelingDTOSaver,
                                               OntwerpRegelingMapper ontwerpRegelingMapper
 

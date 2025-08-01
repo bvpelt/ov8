@@ -8,49 +8,25 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregeling;
 import nl.overheid.omgevingswet.ozon.presenteren.model.OntwerpregelingenSort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stream")
+@RequestMapping("/save")
 @RequiredArgsConstructor // Lombok for constructor injection
 @Slf4j
 public class OntRegstreamController {
 
     private final OzonOntwerpRegelingenStreamService ozonOntwerpRegelingenStreamService;
 
-    /*
-    @GetMapping("/procesontwerp")
-    Flux<Ontwerpregeling> getOntwerpRegelingen(
-            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
-    ) {
-        List<OntwerpregelingenSort> sort = List.of(OntwerpregelingenSort.REGISTRATIETIJDSTIP);
-        LocalDate geldigOp = LocalDate.now();
-        OffsetDateTime beschikbaarOp = OffsetDateTime.now(ZoneOffset.UTC);
-
-
-        return ozonOntwerpRegelingenStreamService.getAllOntwerpRegelingen(
-                beschikbaarOp,
-                true,
-                null,
-                null,
-                sort,
-                null);
-    }
-     */
-
-    @GetMapping("/saveontwerp")
+    @GetMapping("/ontwerp")
     public void saveOntwerpRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
             @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size

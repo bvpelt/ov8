@@ -44,23 +44,21 @@ SELECT postgis_full_version();
 # Running
 After building app
 
-```
+```bash
 # Save all regelingen
-http://localhost:8080/stream/save
-http://localhost:8080/save/regelingen
+curl http://localhost:8080/save/regelingen
 
 # Get history for known regelingen
-http://localhost:8080/history/proces
-http://localhost:8080/save/regelingenhistorie
+curl http://localhost:8080/save/regelingenhistorie
 
 # Get ontwerp regelingen
-http://localhost:8080/stream/saveontwerp
-http://localhost:8080/save/ontwerp
+curl http://localhost:8080/save/ontwerp
 
 # Get geometrieen
-http://localhost:8080/geo/download
-http://localhost:8080/save/geometrie
-
+curl http://localhost:8080/save/geometrie
+```
+Check results
+```sql
 select count(*) from regeling;
 --- # 1 1480 REGELINGEN
 --- # 2 1972 REGELINGEN
