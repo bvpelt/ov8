@@ -5,6 +5,7 @@ import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.repositories.RegelingRepository;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,7 +29,7 @@ public class OzonRegelingHistoryService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonRegelingHistoryService(WebClient webClient,
+    public OzonRegelingHistoryService(@Qualifier("ozonWebClient") WebClient webClient,
                                       RegelingRepository regelingRepository,
                                       RegelingMapper regelingMapper,
                                       RegelingDTOSaver regelingDTOSaver) {

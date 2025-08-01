@@ -11,6 +11,11 @@ curl -k -X 'GET' \
   -H 'accept: application/hal+json' \
   -H 'x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee'
 
+curl -k -X 'GET' \
+ 'https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/regelingen?geldigOp=2025-08-01&inWerkingOp=2025-08-01&beschikbaarOp=2025-08-01T06:14:23.461556275Z&page=1&size=20&_expand=true&_sort=REGISTRATIETIJDSTIP' \
+  -H 'accept: application/hal+json' \
+  -H 'x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee'
+
 
 curl -k -X 'GET' \
   'https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/regelingen' \

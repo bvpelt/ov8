@@ -29,6 +29,7 @@ public class OntRegstreamController {
 
     private final OzonOntwerpRegelingenStreamService ozonOntwerpRegelingenStreamService;
 
+    /*
     @GetMapping("/procesontwerp")
     Flux<Ontwerpregeling> getOntwerpRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -47,6 +48,7 @@ public class OntRegstreamController {
                 sort,
                 null);
     }
+     */
 
     @GetMapping("/saveontwerp")
     public void saveOntwerpRegelingen(

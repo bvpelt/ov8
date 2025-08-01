@@ -19,21 +19,21 @@ public class OzonWebClientConfig {
     private String ozonApiKey;
 
     @Bean
-    public WebClient ozonWebClient(WebClient.Builder webClientBuilder) {
+    public WebClient ozonWebClient() {
         log.info("Configuring Ozon WebClient with base URL: {}", ozonBaseUrl);
-        log.info("Configuring Ozon WebClient with API Key: {}" + (ozonApiKey != null && !ozonApiKey.isEmpty() ? ozonApiKey : "MISSING/EMPTY"));
+        log.info("Configuring Ozon WebClient with API Key: {}", ozonApiKey);
 
-        return webClientBuilder
+        return WebClient.builder()
                 .baseUrl(ozonBaseUrl)
                 .defaultHeader(HttpHeaders.ACCEPT, "application/hal+json") // Set the Accept header
                 .defaultHeader("X-API-KEY", ozonApiKey) // Set the custom API key header
                 // Add the request/response logging filter here
                 .filter((request, next) -> {
-                    System.out.println("---- Outgoing WebClient Request (Filter) ----");
-                    System.out.println("URI: " + request.url());
-                    System.out.println("Method: " + request.method());
-                    request.headers().forEach((name, values) -> System.out.println(name + ": " + values));
-                    System.out.println("----------------------------------------------");
+                    log.debug("---- Outgoing WebClient Request (Filter) ----");
+                    log.debug("URI: " + request.url());
+                    log.debug("Method: " + request.method());
+                    request.headers().forEach((name, values) -> log.debug(name + ": " + values));
+                    log.debug("----------------------------------------------");
                     return next.exchange(request);
                 })
                 .build();

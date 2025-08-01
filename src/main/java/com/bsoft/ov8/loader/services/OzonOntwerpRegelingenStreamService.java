@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregeling;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregelingen;
 import nl.overheid.omgevingswet.ozon.presenteren.model.OntwerpregelingenSort;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,7 +31,7 @@ public class OzonOntwerpRegelingenStreamService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonOntwerpRegelingenStreamService(WebClient webClient,
+    public OzonOntwerpRegelingenStreamService(@Qualifier("ozonWebClient")WebClient webClient,
                                               OntwerpRegelingDTOSaver ontwerpRegelingDTOSaver,
                                               OntwerpRegelingMapper ontwerpRegelingMapper
 

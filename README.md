@@ -47,15 +47,19 @@ After building app
 ```
 # Save all regelingen
 http://localhost:8080/stream/save
+http://localhost:8080/save/regelingen
 
 # Get history for known regelingen
 http://localhost:8080/history/proces
+http://localhost:8080/save/regelingenhistorie
 
 # Get ontwerp regelingen
 http://localhost:8080/stream/saveontwerp
+http://localhost:8080/save/ontwerp
 
 # Get geometrieen
 http://localhost:8080/geo/download
+http://localhost:8080/save/geometrie
 
 select count(*) from regeling;
 --- # 1 1480 REGELINGEN

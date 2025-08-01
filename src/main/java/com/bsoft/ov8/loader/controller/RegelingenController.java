@@ -32,7 +32,7 @@ import java.util.List;
 public class RegelingenController {
     private static final Boolean goOn = true;
     private final OzonRegelingService ozonRegelingService;
-
+/*
     @GetMapping("/start")
     public ResponseEntity<List<Regeling>> triggerExternalProductFetch(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -152,4 +152,6 @@ public class RegelingenController {
         // .doOnSuccess(voidResult -> log.info("Controller: processAllRegelingen completed successfully."))
         // .doOnError(e -> log.error("Controller: processAllRegelingen encountered an error: {}", e.getMessage(), e));
     }
+
+ */
 }

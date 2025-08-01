@@ -1,11 +1,13 @@
 package com.bsoft.ov8.loader.services;
 
+import com.bsoft.ov8.loader.config.OzonWebClientConfig;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regeling;
 import nl.overheid.omgevingswet.ozon.presenteren.model.Regelingen;
 import nl.overheid.omgevingswet.ozon.presenteren.model.RegelingenSort;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -31,7 +33,7 @@ public class OzonRegelingenStreamService {
     @Value("${api.ozon.presenteren.base-url}")
     private String ozonBaseUrl;
 
-    public OzonRegelingenStreamService(WebClient webClient,
+    public OzonRegelingenStreamService(@Qualifier("ozonWebClient")WebClient webClient,
                                        RegelingDTOSaver regelingDTOSaver,
                                        RegelingMapper regelingMapper
 
@@ -104,6 +106,7 @@ public class OzonRegelingenStreamService {
                 .uri(uri)
                 .retrieve()
                 .bodyToMono(Regelingen.class) // Correct type here
+                .doOnError(e -> log.error("Error fetching page {}: {}", uri, e.getMessage()))
                 .doOnError(e -> System.err.println("Error fetching page " + uri + ": " + e.getMessage()));
     }
 

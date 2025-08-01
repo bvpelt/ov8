@@ -29,6 +29,7 @@ public class RegstreamController {
 
     private final OzonRegelingenStreamService ozonRegelingenStreamService;
 
+    /*
     @GetMapping("/proces")
     Flux<Regeling> getRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -51,7 +52,7 @@ public class RegstreamController {
                 sort,
                 null);
     }
-
+*/
     @GetMapping("/save")
     public void saveRegelingen(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
