@@ -159,7 +159,7 @@ public class OzonGeoDownloadService {
         return webClient.get()
                 .uri(uri)
                 .headers(httpHeaders -> {
-   //                 httpHeaders.set("x-api-key", x_api_key);
+                    //                 httpHeaders.set("x-api-key", x_api_key);
                     httpHeaders.set("Accept", "application/json");
                 })
                 .retrieve()

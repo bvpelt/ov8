@@ -80,6 +80,38 @@ from
      group by publicatieid)
 order by aantal desc;
 
+-- postgresql
+-- show size of database 'ov8'
+SELECT pg_size_pretty(pg_database_size('ov8'));
+
+-- show dead tuples
+SELECT
+    schemaname,
+    relname,  -- tablename
+    n_dead_tup,
+    n_live_tup,
+    round(n_dead_tup::numeric/NULLIF(n_live_tup + n_dead_tup, 0) * 100, 2) as dead_percentage
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+
+-- return space to OS for table locatie
+VACUUM FULL locatie;
+
+-- show tablesize of all tables
+SELECT
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
+FROM pg_tables
+WHERE schemaname NOT IN ('information_schema', 'pg_catalog')
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+
+-- regular maintenance
+-- Weekly maintenance script
+VACUUM ANALYZE;  -- Reclaim space and update statistics
+REINDEX DATABASE ov8;  -- Rebuild indexes monthly for database ov8
+
 -- oppervlakte voor locaties
 select l.noemer, ST_AREA(g.geometrie)/1000000 from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null order by l.noemer;
 
