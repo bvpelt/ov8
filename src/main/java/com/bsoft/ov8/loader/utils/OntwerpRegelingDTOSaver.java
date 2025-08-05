@@ -1,6 +1,7 @@
 package com.bsoft.ov8.loader.utils;
 
 import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
+import com.bsoft.ov8.loader.database.LocatieDTO;
 import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;
 import com.bsoft.ov8.loader.database.SoortRegelingDTO;
 import com.bsoft.ov8.loader.mappers.LocatieMapper;
@@ -10,10 +11,13 @@ import com.bsoft.ov8.loader.repositories.LocatieRepository;
 import com.bsoft.ov8.loader.repositories.OntwerpRegelingRepository;
 import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
 import lombok.extern.slf4j.Slf4j;
-import nl.overheid.omgevingswet.ozon.presenteren.model.Ontwerpregeling;
+import nl.overheid.omgevingswet.ozon.presenteren.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -48,7 +52,7 @@ public class OntwerpRegelingDTOSaver {
                 ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                 ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
-        OntwerpRegelingDTO savedOntwerpRegelingDTO;
+        OntwerpRegelingDTO managedOntwerpRegelingDTO;
 
 
         // Check if RegelingDTO already exists
@@ -56,6 +60,37 @@ public class OntwerpRegelingDTOSaver {
                 ontwerpRegelingDTO.getIdentificatie(),
                 ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                 ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
+
+        if (ontwerpregeling.getEmbedded() != null) {
+            EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();
+            if (embeddedOntwerpLocatie != null) {
+                EmbeddedOntwerpLocatieEmbedded embeddedOntwerpLocatieEmbedded = embeddedOntwerpLocatie.getEmbedded();
+                List<EmbeddedOntwerpLocatie> embeddedOntwerpLocatieList = embeddedOntwerpLocatieEmbedded.getOmvat();
+                List<EmbeddedLocatie> embeddedLocatieList = embeddedOntwerpLocatieEmbedded.getOmvatVastgesteld();
+
+                List<LocatieDTO> omvat = new ArrayList<>();
+                embeddedOntwerpLocatieList.forEach(embeddedLocatie -> {
+                    LocatieDTO locatie =  locatieMapper.toLocatieDTO(embeddedLocatie);
+
+                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                    if (!optionalLocatieDTO.isPresent()) {
+                        LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
+                        omvat.add(managedLocatieDTO);
+                    }
+                });
+
+                List<LocatieDTO> omvatVastgesteld = new ArrayList<>();
+                embeddedLocatieList.forEach(embeddedLocatie -> {
+                    LocatieDTO locatie =  locatieMapper.toLocatieDTO(embeddedLocatie);
+
+                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                    if (!optionalLocatieDTO.isPresent()) {
+                        LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
+                        omvatVastgesteld.add(managedLocatieDTO);
+                    }
+                });
+            }
+        }
 
         if (optionalOntwerpRegelingDTO.isEmpty()) {
             log.debug("+++> New OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} not exists. Saving ontwerpregeling.",
@@ -65,13 +100,8 @@ public class OntwerpRegelingDTOSaver {
 
             ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
 
-            savedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
 
-
-            // --- Save the RegelingDTO ---
-            // Hibernate will now correctly manage the many-to-many relationship
-            // based on the managed entities in regelingDTO.regelingsgebied and the cascade type.
-            //ontwerpRegelingRepository.save(ontwerpRegelingDTO);
         } else {
             log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
                     ontwerpRegelingDTO.getIdentificatie(),
@@ -79,10 +109,10 @@ public class OntwerpRegelingDTOSaver {
                     ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
             ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
-            savedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
         }
 
-        return savedOntwerpRegelingDTO;
+        return managedOntwerpRegelingDTO;
     }
 
     private OntwerpRegelingDTO oneToMany(OntwerpRegelingDTO ontwerpRegelingDTO) {

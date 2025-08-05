@@ -112,3 +112,5 @@ api:
     download:
       base-url: ${OZON_BASE_URL:https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/geometrieopvragen/v1}
       epsg28992: http://www.opengis.net/def/crs/EPSG/0/28992
+    webclient:
+      max-in-memory-size: 200MB

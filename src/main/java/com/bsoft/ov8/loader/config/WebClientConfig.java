@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -22,15 +23,19 @@ public class WebClientConfig {
     @Value("${api.ozon.api-key}")
     private String ozonApiKey;
 
+    @Value("${webclient.max-in-memory-size:200MB}")
+    private DataSize maxInMemorySize;
+
     /**
      * Common WebClient builder with shared configuration (buffer size, API key, logging)
      */
     private WebClient.Builder createBaseWebClientBuilder() {
+        log.debug("Using http maxmemorysize: {}", maxInMemorySize.toString());
         return WebClient.builder()
                 // Maximum buffer size for downloads
                 .exchangeStrategies(ExchangeStrategies.builder()
                         .codecs(configurer -> {
-                            configurer.defaultCodecs().maxInMemorySize(200 * 1024 * 1024); // 200MB
+                            configurer.defaultCodecs().maxInMemorySize((int) maxInMemorySize.toBytes());
                         })
                         .build())
                 .defaultHeader("X-API-KEY", ozonApiKey) // Common API key header
