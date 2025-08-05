@@ -54,7 +54,6 @@ public class OntwerpRegelingDTOSaver {
 
         OntwerpRegelingDTO managedOntwerpRegelingDTO;
 
-
         // Check if RegelingDTO already exists
         Optional<OntwerpRegelingDTO> optionalOntwerpRegelingDTO = ontwerpRegelingRepository.findByIdentificatieAndTijdstipregistratieAndEindRegistratie(
                 ontwerpRegelingDTO.getIdentificatie(),
@@ -62,33 +61,40 @@ public class OntwerpRegelingDTOSaver {
                 ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
         if (ontwerpregeling.getEmbedded() != null) {
+            log.debug("01 ontwerpregeling has embedded");
             EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();
             if (embeddedOntwerpLocatie != null) {
+                log.debug("02 embeddedOntwerpLocatie has embedded ontwerplocatie");
                 EmbeddedOntwerpLocatieEmbedded embeddedOntwerpLocatieEmbedded = embeddedOntwerpLocatie.getEmbedded();
-                List<EmbeddedOntwerpLocatie> embeddedOntwerpLocatieList = embeddedOntwerpLocatieEmbedded.getOmvat();
-                List<EmbeddedLocatie> embeddedLocatieList = embeddedOntwerpLocatieEmbedded.getOmvatVastgesteld();
+                if (embeddedOntwerpLocatieEmbedded != null) {
+                    List<EmbeddedOntwerpLocatie> embeddedOntwerpLocatieList = embeddedOntwerpLocatieEmbedded.getOmvat();
+                    List<EmbeddedLocatie> embeddedLocatieList = embeddedOntwerpLocatieEmbedded.getOmvatVastgesteld();
 
-                List<LocatieDTO> omvat = new ArrayList<>();
-                embeddedOntwerpLocatieList.forEach(embeddedLocatie -> {
-                    LocatieDTO locatie =  locatieMapper.toLocatieDTO(embeddedLocatie);
+                    log.debug("03 # omvat: {}, # omvatvastgesteld {}", embeddedOntwerpLocatieList.size(), embeddedLocatieList.size());
+                    List<LocatieDTO> omvat = new ArrayList<>();
+                    embeddedOntwerpLocatieList.forEach(embeddedLocatie -> {
+                        LocatieDTO locatie = locatieMapper.toLocatieDTO(embeddedLocatie);
+                        log.debug("04 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        if (!optionalLocatieDTO.isPresent()) {
+                            log.debug("05 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
+                            omvat.add(managedLocatieDTO);
+                        }
+                    });
 
-                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
-                    if (!optionalLocatieDTO.isPresent()) {
-                        LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
-                        omvat.add(managedLocatieDTO);
-                    }
-                });
-
-                List<LocatieDTO> omvatVastgesteld = new ArrayList<>();
-                embeddedLocatieList.forEach(embeddedLocatie -> {
-                    LocatieDTO locatie =  locatieMapper.toLocatieDTO(embeddedLocatie);
-
-                    Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
-                    if (!optionalLocatieDTO.isPresent()) {
-                        LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
-                        omvatVastgesteld.add(managedLocatieDTO);
-                    }
-                });
+                    List<LocatieDTO> omvatVastgesteld = new ArrayList<>();
+                    embeddedLocatieList.forEach(embeddedLocatie -> {
+                        LocatieDTO locatie = locatieMapper.toLocatieDTO(embeddedLocatie);
+                        log.debug("06 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        if (!optionalLocatieDTO.isPresent()) {
+                            log.debug("05 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
+                            omvatVastgesteld.add(managedLocatieDTO);
+                        }
+                    });
+                }
             }
         }
 

@@ -1,4 +1,5 @@
 drop table bevoegdgezag;
+drop view locatie_geometrie_view;
 drop table locatie;
 drop table regeling;
 drop table regeling_opvolgervan;
