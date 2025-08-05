@@ -41,11 +41,20 @@ public class LocatieDTO implements Serializable {
     @Column(name = "ispons")
     private Boolean isPons = false;
 
+    @Column(name = "status")
+    private String status;
+
     @Embedded
     private BoundingBoxDTO boundingBox;
 
     @Embedded
     private RegistratiegegevensDTO registratiegegevens;
+
+    @Column(name = "ontwerpbesluitid")
+    private String ontwerpbesluitId;
+
+    @Column(name = "technischid")
+    private String technischId;
 
     // This is the inverse side of the Many-to-Many relationship
     @ManyToMany(mappedBy = "regelingsgebied") //, fetch = FetchType.LAZY)

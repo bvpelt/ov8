@@ -36,13 +36,13 @@ public class OntRegstreamController {
 
         long start = System.currentTimeMillis();
 
-        ozonOntwerpRegelingenStreamService.procesAll(
+        ozonOntwerpRegelingenStreamService.processAll(
                 beschikbaarOp,
-                true,
-                null,
-                null,
-                sort,
-                null
+                null, // synchroniseer met tileset
+                true, // expand
+                null, // initial page
+                null, // page size
+                sort  // sort parameters
         );
         long end = System.currentTimeMillis();
 

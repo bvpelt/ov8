@@ -2,6 +2,8 @@ package com.bsoft.ov8.loader.mappers;
 
 import com.bsoft.ov8.loader.database.LocatieDTO;
 import nl.overheid.omgevingswet.ozon.presenteren.model.EmbeddedLocatie;
+import nl.overheid.omgevingswet.ozon.presenteren.model.EmbeddedOntwerpLocatie;
+import nl.overheid.omgevingswet.ozon.presenteren.model.EmbeddedOntwerpLocatieEmbedded;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -48,4 +50,15 @@ public abstract class LocatieMapper {
         locatieDTOs.add(toLocatieDTO(embeddedLocatie)); // Map the single EmbeddedLocatie
         return locatieDTOs;
     }
+
+    @Mapping(source = "identificatie", target = "identificatie", qualifiedByName = "mapUriToString")
+    @Mapping(source = "ontwerpbesluitIdentificatie", target = "ontwerpbesluitId", qualifiedByName = "mapUriToString")
+    @Mapping(source = "technischId", target = "technischId")
+    @Mapping(source = "geometrieIdentificatie", target = "geometrieIdentificatie")
+    @Mapping(source = "locatieType", target = "locatieType")
+    @Mapping(source = "noemer", target = "noemer")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "boundingBox", target = "boundingBox")
+    @Mapping(source = "geregistreerdMet", target = "registratiegegevens")
+    public abstract LocatieDTO toLocatieDTO(EmbeddedOntwerpLocatie locatie);
 }
