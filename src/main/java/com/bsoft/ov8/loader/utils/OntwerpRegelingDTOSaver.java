@@ -65,19 +65,32 @@ public class OntwerpRegelingDTOSaver {
             EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();
             if (embeddedOntwerpLocatie != null) {
                 log.debug("02 embeddedOntwerpLocatie has embedded ontwerplocatie");
+                LocatieDTO ontwerpLocatie = locatieMapper.toLocatieDTO(embeddedOntwerpLocatie);
+
+                LocatieDTO managedOntwerpLocatieDTO;
+                Optional<LocatieDTO> optionalOntwerpLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
+                if (!optionalOntwerpLocatieDTO.isPresent()) {
+                    log.debug("03 ontwerp locatie not present saving: {}, {}", ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
+                    managedOntwerpLocatieDTO = locatieRepository.save(ontwerpLocatie);
+                }   else {
+                    log.debug("04 ontwerp locatie present using: {}, {}", optionalOntwerpLocatieDTO.get().getIdentificatie(), optionalOntwerpLocatieDTO.get().getGeometrieIdentificatie());
+                    managedOntwerpLocatieDTO = optionalOntwerpLocatieDTO.get();
+                }
+
                 EmbeddedOntwerpLocatieEmbedded embeddedOntwerpLocatieEmbedded = embeddedOntwerpLocatie.getEmbedded();
                 if (embeddedOntwerpLocatieEmbedded != null) {
                     List<EmbeddedOntwerpLocatie> embeddedOntwerpLocatieList = embeddedOntwerpLocatieEmbedded.getOmvat();
                     List<EmbeddedLocatie> embeddedLocatieList = embeddedOntwerpLocatieEmbedded.getOmvatVastgesteld();
 
-                    log.debug("03 # omvat: {}, # omvatvastgesteld {}", embeddedOntwerpLocatieList.size(), embeddedLocatieList.size());
+                    log.debug("05 # omvat: {}, # omvatvastgesteld {}", embeddedOntwerpLocatieList.size(), embeddedLocatieList.size());
                     List<LocatieDTO> omvat = new ArrayList<>();
                     embeddedOntwerpLocatieList.forEach(embeddedLocatie -> {
                         LocatieDTO locatie = locatieMapper.toLocatieDTO(embeddedLocatie);
-                        log.debug("04 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        log.debug("06 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         if (!optionalLocatieDTO.isPresent()) {
-                            log.debug("05 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            log.debug("07 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            locatie.setParentGroup(managedOntwerpLocatieDTO);
                             LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
                             omvat.add(managedLocatieDTO);
                         }
@@ -86,10 +99,11 @@ public class OntwerpRegelingDTOSaver {
                     List<LocatieDTO> omvatVastgesteld = new ArrayList<>();
                     embeddedLocatieList.forEach(embeddedLocatie -> {
                         LocatieDTO locatie = locatieMapper.toLocatieDTO(embeddedLocatie);
-                        log.debug("06 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        log.debug("08 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         if (!optionalLocatieDTO.isPresent()) {
-                            log.debug("05 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            log.debug("09 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                            locatie.setParentGroup(managedOntwerpLocatieDTO);
                             LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
                             omvatVastgesteld.add(managedLocatieDTO);
                         }

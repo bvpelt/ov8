@@ -174,7 +174,7 @@ public class OzonOntwerpRegelingenStreamService {
 
         getAllOntwerpRegelingenStream(beschikbaarOp, synchroniseerMetTileset, expand, initialPage, size, sort)
                 .doOnNext(ontwerpregeling -> {
-                    log.debug("Processing ontwerpregeling {}", ontwerpregeling.getIdentificatie());
+                    log.debug("Processing ontwerpregeling {}", ontwerpregeling.toString());
                     try {
                         OntwerpRegelingDTO ontwerpRegelingDTO = ontwerpRegelingMapper.toOntwerpRegelingDTO(ontwerpregeling);
                         ontwerpRegelingDTOSaver.saveOntwerpregeling(ontwerpRegelingDTO, ontwerpregeling);
