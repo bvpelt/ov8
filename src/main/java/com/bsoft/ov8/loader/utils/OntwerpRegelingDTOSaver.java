@@ -1,15 +1,10 @@
 package com.bsoft.ov8.loader.utils;
 
-import com.bsoft.ov8.loader.database.BevoegdGezagDTO;
-import com.bsoft.ov8.loader.database.LocatieDTO;
-import com.bsoft.ov8.loader.database.OntwerpRegelingDTO;
-import com.bsoft.ov8.loader.database.SoortRegelingDTO;
+import com.bsoft.ov8.loader.database.*;
 import com.bsoft.ov8.loader.mappers.LocatieMapper;
+import com.bsoft.ov8.loader.mappers.OntwerpLocatieMapper;
 import com.bsoft.ov8.loader.mappers.OntwerpRegelingMapper;
-import com.bsoft.ov8.loader.repositories.BevoegdGezagRepository;
-import com.bsoft.ov8.loader.repositories.LocatieRepository;
-import com.bsoft.ov8.loader.repositories.OntwerpRegelingRepository;
-import com.bsoft.ov8.loader.repositories.SoortRegelingRepository;
+import com.bsoft.ov8.loader.repositories.*;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.*;
 import org.springframework.stereotype.Service;
@@ -24,24 +19,30 @@ import java.util.Optional;
 @Service
 public class OntwerpRegelingDTOSaver {
     private final LocatieMapper locatieMapper;
+    private final OntwerpLocatieMapper ontwerpLocatieMapper;
     private final OntwerpRegelingMapper ontwerpRegelingMapper;
 
     private final BevoegdGezagRepository bevoegdGezagRepository;
     private final OntwerpRegelingRepository ontwerpRegelingRepository;
     private final SoortRegelingRepository soortRegelingRepository;
     private final LocatieRepository locatieRepository;
+    private final OntwerpLocatieRepository ontwerpLocatieRepository;
 
     public OntwerpRegelingDTOSaver(BevoegdGezagRepository bevoegdGezagRepository,
                                    OntwerpRegelingRepository ontwerpRegelingRepository,
                                    SoortRegelingRepository soortRegelingRepository,
                                    LocatieRepository locatieRepository,
+                                   OntwerpLocatieRepository ontwerpLocatieRepository,
                                    LocatieMapper locatieMapper,
+                                   OntwerpLocatieMapper ontwerpLocatieMapper,
                                    OntwerpRegelingMapper ontwerpRegelingMapper) {
         this.bevoegdGezagRepository = bevoegdGezagRepository;
         this.ontwerpRegelingRepository = ontwerpRegelingRepository;
         this.soortRegelingRepository = soortRegelingRepository;
         this.locatieRepository = locatieRepository;
+        this.ontwerpLocatieRepository = ontwerpLocatieRepository;
         this.locatieMapper = locatieMapper;
+        this.ontwerpLocatieMapper = ontwerpLocatieMapper;
         this.ontwerpRegelingMapper = ontwerpRegelingMapper;
     }
 
@@ -65,15 +66,15 @@ public class OntwerpRegelingDTOSaver {
             EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();
             if (embeddedOntwerpLocatie != null) {
                 log.debug("02 embeddedOntwerpLocatie has embedded ontwerplocatie");
-                LocatieDTO ontwerpLocatie = locatieMapper.toLocatieDTO(embeddedOntwerpLocatie);
+                OntwerpLocatieDTO ontwerpLocatie = ontwerpLocatieMapper.toOntwerpLocatieDTO(embeddedOntwerpLocatie);
 
-                LocatieDTO managedOntwerpLocatieDTO;
-                Optional<LocatieDTO> optionalOntwerpLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
+                OntwerpLocatieDTO managedOntwerpLocatieDTO;
+                Optional<OntwerpLocatieDTO> optionalOntwerpLocatieDTO = ontwerpLocatieRepository.findByIdentificatieAndGeometrieIdentificatie(ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
                 if (!optionalOntwerpLocatieDTO.isPresent()) {
-                    log.debug("03 ontwerp locatie not present saving: {}, {}", ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
-                    managedOntwerpLocatieDTO = locatieRepository.save(ontwerpLocatie);
+                    log.debug("03 ontwerplocatie not present saving: {}, {}", ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
+                    managedOntwerpLocatieDTO = ontwerpLocatieRepository.save(ontwerpLocatie);
                 }   else {
-                    log.debug("04 ontwerp locatie present using: {}, {}", optionalOntwerpLocatieDTO.get().getIdentificatie(), optionalOntwerpLocatieDTO.get().getGeometrieIdentificatie());
+                    log.debug("04 ontwerplocatie present using: {}, {}", optionalOntwerpLocatieDTO.get().getIdentificatie(), optionalOntwerpLocatieDTO.get().getGeometrieIdentificatie());
                     managedOntwerpLocatieDTO = optionalOntwerpLocatieDTO.get();
                 }
 
@@ -83,15 +84,15 @@ public class OntwerpRegelingDTOSaver {
                     List<EmbeddedLocatie> embeddedLocatieList = embeddedOntwerpLocatieEmbedded.getOmvatVastgesteld();
 
                     log.debug("05 # omvat: {}, # omvatvastgesteld {}", embeddedOntwerpLocatieList.size(), embeddedLocatieList.size());
-                    List<LocatieDTO> omvat = new ArrayList<>();
+                    List<OntwerpLocatieDTO> omvat = new ArrayList<>();
                     embeddedOntwerpLocatieList.forEach(embeddedLocatie -> {
-                        LocatieDTO locatie = locatieMapper.toLocatieDTO(embeddedLocatie);
+                        OntwerpLocatieDTO locatie = ontwerpLocatieMapper.toOntwerpLocatieDTO(embeddedLocatie);
                         log.debug("06 check locatie: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
-                        Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
+                        Optional<OntwerpLocatieDTO> optionalLocatieDTO = ontwerpLocatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         if (!optionalLocatieDTO.isPresent()) {
                             log.debug("07 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                             locatie.setParentGroup(managedOntwerpLocatieDTO);
-                            LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
+                            OntwerpLocatieDTO managedLocatieDTO = ontwerpLocatieRepository.save(locatie);
                             omvat.add(managedLocatieDTO);
                         }
                     });
@@ -103,7 +104,7 @@ public class OntwerpRegelingDTOSaver {
                         Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         if (!optionalLocatieDTO.isPresent()) {
                             log.debug("09 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
-                            locatie.setParentGroup(managedOntwerpLocatieDTO);
+                           // locatie.setParentGroup(managedOntwerpLocatieDTO);
                             LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
                             omvatVastgesteld.add(managedLocatieDTO);
                         }

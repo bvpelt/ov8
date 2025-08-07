@@ -53,11 +53,9 @@ public class OntwerpLocatieDTO implements Serializable {
     @Embedded
     private RegistratiegegevensDTO registratiegegevens;
 
-
-
     // This is the inverse side of the Many-to-Many relationship
     @ManyToMany(mappedBy = "regelingsgebied") //, fetch = FetchType.LAZY)
-    private Set<RegelingDTO> regelingsgebieden = new HashSet<>(); // Naming convention `regelingsgebieds` for the collection
+    private Set<OntwerpRegelingDTO> regelingsgebieden = new HashSet<>(); // Naming convention `regelingsgebieds` for the collection
 
     // This field represents the "one" side (the group).
     // It is the parent of a hierarchical relationship.
