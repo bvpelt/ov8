@@ -70,7 +70,7 @@ public class OntwerpRegelingDTOSaver {
 
                 OntwerpLocatieDTO managedOntwerpLocatieDTO;
                 Optional<OntwerpLocatieDTO> optionalOntwerpLocatieDTO = ontwerpLocatieRepository.findByIdentificatieAndGeometrieIdentificatie(ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
-                if (!optionalOntwerpLocatieDTO.isPresent()) {
+                if (optionalOntwerpLocatieDTO.isEmpty()) {
                     log.debug("03 ontwerplocatie not present saving: {}, {}", ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
                     managedOntwerpLocatieDTO = ontwerpLocatieRepository.save(ontwerpLocatie);
                 }   else {
