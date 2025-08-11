@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Set;
 
 @Data
 @Builder
@@ -89,4 +90,11 @@ public class OntwerpRegelingDTO implements Serializable {
     private ProcedureverloopDTO procedureverloop;
 
     //private OntwerpregelingEmbedded embedded;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}) // Or CascadeType.ALL for broader cascading
+    @JoinTable(
+            name = "ontwerpregeling_regelingsgebied", // This will be the name of your join table
+            joinColumns = @JoinColumn(name = "ontwerpregeling_id"), // Column in the join table referring to THIS RegelingDTO
+            inverseJoinColumns = @JoinColumn(name = "ontwerplocatie_id") // Column in the join table referring to the OTHER RegelingDTO (the one it succeeds)
+    )
+    private Set<OntwerpLocatieDTO> ontwerpregelingsgebied;
 }
