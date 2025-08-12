@@ -3,7 +3,8 @@ create table procedurestap
     id           bigint not null primary key,
     soortstap_id bigint,
     actor        text,
-    voltooidop   text
+    voltooidop   text,
+    procedureverloop_id bigint
 );
 
 create index procedurestap_voltooidop_ix on procedurestap (voltooidop);

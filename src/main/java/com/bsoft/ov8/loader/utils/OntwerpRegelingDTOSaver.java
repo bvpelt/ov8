@@ -61,6 +61,9 @@ public class OntwerpRegelingDTOSaver {
                 ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                 ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
+        // Procedurestappen
+
+        // Locaties
         if (ontwerpregeling.getEmbedded() != null) {
             log.debug("01 ontwerpregeling has embedded");
             EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();

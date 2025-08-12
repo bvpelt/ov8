@@ -11,8 +11,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
-@ToString(exclude = {"aangeleverdDoorEen", "type"})
+@EqualsAndHashCode(exclude = {"procedureverloop"}) // Prevent circular references in equals/hashCode
+@ToString(exclude = {"aangeleverdDoorEen", "type", "procedureverloop"}) // Prevent circular references in toString
 @Entity
 @Table(name = "ontwerpregeling", schema = "public", catalog = "ov8")
 public class OntwerpRegelingDTO implements Serializable {
@@ -86,7 +86,10 @@ public class OntwerpRegelingDTO implements Serializable {
     @Column(name = "publicatieid")
     private String publicatieID;
 
-    @Embedded
+//    @Embedded
+//    private ProcedureverloopDTO procedureverloop;
+// 1:1 relationship with ProcedureverloopDTO
+    @OneToOne(mappedBy = "ontwerpRegeling", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private ProcedureverloopDTO procedureverloop;
 
     //private OntwerpregelingEmbedded embedded;

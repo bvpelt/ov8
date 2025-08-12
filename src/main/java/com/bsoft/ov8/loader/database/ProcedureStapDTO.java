@@ -1,10 +1,7 @@
 package com.bsoft.ov8.loader.database;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -13,8 +10,8 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-//@EqualsAndHashCode(of = "code")
-//@ToString(exclude = "regelingen")
+@EqualsAndHashCode(exclude = {"procedureverloop"}) // Prevent circular references
+@ToString(exclude = {"procedureverloop"}) // Prevent circular references
 @Entity
 @Table(name = "procedurestap", schema = "public", catalog = "ov8")
 public class ProcedureStapDTO implements Serializable {
@@ -35,4 +32,9 @@ public class ProcedureStapDTO implements Serializable {
 
     @Column(name = "voltooidop")
     private String voltooidOp;
+
+    // Many-to-one relationship back to ProcedureverloopDTO
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "procedureverloop_id", referencedColumnName = "id")
+    private ProcedureverloopDTO procedureverloop;
 }
