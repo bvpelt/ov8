@@ -1,0 +1,861 @@
+\d
+SELECT rolname, rolsuper FROM pg_roles WHERE rolname = 'bvpelt';
+create table aap (
+id longint);
+create table aap (
+id longint);
+create table aap(
+id longint);
+create table aap(
+id longint);
+\d
+create table aap(
+id BIGINT);
+create table aap (
+id BIGINT);
+\d
+drop table app;
+drop table aap;
+\d
+select * from adres;
+select * from user;
+select * from users;
+\d
+\d
+select * from users;
+select * from users;
+\d
+\h
+\?
+\d
+\?
+\du
+GRANT ALL PRIVILEGES ON SCHEMA public TO testuser;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO testuser;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO testuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO testuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO testuser;
+\du
+\d
+\d
+select * from flyway_schema_history ;
+select * from flyway_schema_history ;
+\d
+\d
+\i scripts/emptydb.sql
+\d
+\d
+\d regeling
+\i scipts/emptydb.sql
+\i scipts\emptydb.sql
+\i scripts/emptydb.sql
+\i scripts/emptydb.sql
+\d
+drop table regeling;
+\d
+\i scripts/emptydb.sql
+\d
+drop table regeling_bevoegdgezag
+;
+\d
+drop table regeling_soortregeling;
+\d
+\ds
+\h
+/h
+;
+select * from regeling;
+\d
+\d regeling
+select * from bevoegdgezag;
+select * from soortregeling;
+select * from regeling;
+select * from regeling;
+select id, identificatie, officieletitel,versie from regeling;
+select id from regeling;
+select identificatie from regeling;
+select * from soortregeling;
+select * from regeling;
+delete from regeling;
+select * from regeling;
+delete from regeling;
+select * from regeling;
+select count(*) from regeling;
+delete from regeling;
+select * from soortregeling;
+select * from bevoegdgezag;
+select * from bevoegdgezag;
+select * from soortregeling;
+select count(*) from regeling;
+select * from regeling;
+select id,identificatie from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select count(*) from regeling;
+select * from bevoegdgezag;
+select count(*) from bevoegdgezag;
+select * from bevoegdgezag order by code;
+select count(*), bestuurslaag from bevoegdgezag group by bestuurslaag order by bestuurslaag;
+select * from soortregeling;
+delete from regeling;
+select count(*) from regeling;
+\d
+select * from regeling_opvolgervan;
+\d
+create exension postgis;
+create extension postgis;
+\d regeling
+select count(*) from regeling;
+select * from regeling where id > 1425;
+\d
+drop table regeling_opvolgervan;
+select * from flyway_schema_history ;
+select * from flyway_schema_history ;
+delete from flyway_schema_history where installed_schema = '1.04';
+select * from flyway_schema_history ;
+delete from flyway_schema_history where version = '1.04';
+\d
+\d locatie
+select * from flyway_schema_history ;
+\d
+drop table regeling_regelingsgebied ;
+drop table locatie ;
+select * from flyway_schema_history ;
+delete from flyway_schema_history where versie > '1.04';
+select * from flyway_schema_history ;
+delete from flyway_schema_history where version > '1.04';
+select * from location;
+select * from locatie;
+\d
+select * from locatie;
+select * from regeling_regelingsgebied;
+delete from location;
+delete from locatie;
+\d
+select * from regeling_regelingsgebied;
+select * from locatie;
+\d
+\i scripts/empty.sql
+\i scripts/emptydb.sql
+\d
+\d
+select * from locatie;
+select count(*) from locatie;
+select count(*) from regeling;
+select * from regeling_regelingsgebied;
+select * from regeling_regelingsgebied;
+select count(*) as aantal, locatie_id from regeling_regelingsgebied group by relatie_id;
+\d regeling_regelingsgebied;
+select count(*) as aantal, regeling_id, locatie_id from regeling_regelingsgebied group by locatie_id, regeling_id;
+select count(*) as aantal, locatie_id from regeling_regelingsgebied group by locatie_id;
+select count(*) as aantal, locatie_id from regeling_regelingsgebied group by locatie_id where aantal > 1;
+select count(*) as aantal, locatie_id from regeling_regelingsgebied group by locatie_id;
+select * from (select count(*) as aantal, locatie_id from regeling_regelingsgebied group by locatie_id) where aantal > 1;
+select * from locatie_id where id = 1;
+select * from locatie where id = 1;
+select * from locatie where id = 1;
+select * from locatie where versie > 1;
+\d
+select * from regeling_opvolgervan
+;
+select * from regeling_opvolgervan
+;
+\i scripts/emptydb.sql
+\d regeling
+select * from regeling where version = 6;
+select * from regeling where versie = 6;
+select count(*) as aantal, identificatie from regeling group by identificatie;
+select aantal, identificatie from (select count(*) as aantal, identificatie from regeling group by identificatie) where aantal > 1;
+select aantal, identificatie from (select count(*) as aantal, identificatie from locatie group by identificatie) where aantal > 1;
+select * from locatie
+;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select * from locatie;
+\d
+\d locatie
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+select count(*) as aantal, locatietype from locatie group by locatie order by locatietype;
+select count(*) as aantal, locatietype from locatie group by locatietype order by locatietype;
+select id, identificatie from locatie where locatietype = "GEBIEDENGROEP";
+select id, identificatie from locatie where locatietype = 'GEBIEDENGROEP';
+select id, identificatie, parent_group_id from locatie where locatietype = 'GEBIEDENGROEP';
+select id, identificatie, parent_group_id from locatie where locatietype = 'GEBIEDENGROEP';
+select id, identificatie, parent_group_id from locatie where locatietype = 'GEBIEDENGROEP';
+select id, identificatie, parent_group_id from locatie where parent_group_id = 1725;
+\d locatie
+select id, identificatie, parent_group_id, minx, miny, maxx, maxy from locatie where parent_group_id = 1725;
+select id, identificatie, parent_group_id, minx, miny, maxx, maxy from locatie where parent_group_id in (select id from locatie where locatietype = 'GEBIEDENGROEP') order by parent_group_id;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+\d locatie
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+select count(*) from locatie;
+select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id;
+select sum(aantal) from (select count(*) as aantal, parent_group_id from locatie group by parent_group_id order by parent_group_id);
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select identificatie from regeling;
+\d regeling
+select identificatie, soortregeling from regeling;
+\d soortregeling
+select r.identificatie, s.waarde from regeling r, soortregeling s where r.soortregeling_id = s.id;
+select r.identificatie, s.waarde from regeling r, soortregeling s where r.soortregeling_id = s.id order by r.identificatie;
+\d bevoegdgezag
+select r.identificatie, b.naam, s.waarde from regeling r, bevoegdgezag b, soortregeling s where r.soortregeling_id = s.id and r.bevoegdgezag_id=b.id order by r.identificatie;
+select * from location where version > 1;
+select * from locatie where version > 1;
+select * from locatie where versie > 1;
+select count(*) as aantal, identificatie from locatie group by identificatie;
+select count(*) as aantal, identificatie from regeling group by identificatie;
+select identificatie, versie from regeling;
+select identificatie, versie from regeling;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select * from location;
+select * from locatie;
+\d locatie
+select identificatie, versie, noemer, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie from locatie order by identificatie, versie;
+select identificatie, versie, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie from locatie order by identificatie, versie;
+select noemer, identificatie from locatie order by noemer, identificatie;
+select count(*) as aantal, noemer from locatie group by noemer order by noemer;
+select count(*) as aantal, noemer from locatie group by noemer where aantal > 4 order by noemer 
+;
+select count(*) as aantal, noemer from locatie group by noemer where aantal > 4 order by noemer ;
+select count(*) as aantal, noemer from locatie where aantal > 4 group by noemer order by noemer ;
+select count(*) as aantal, noemer from locatie group by noemer order by noemer ;
+select aantal, noemer from (select count(*) as aantal, noemer from locatie group by noemer order by noemer) where aantal > 4;
+select identificatie, versie, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie from locatie where noemer = 'gemeente Dinkelland' order by identificatie, versie;
+select identificatie, versie, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie from locatie where noemer = 'gemeente Dinkelland' order by identificatie, versie, begingeldigheid, eindgeldigheid;
+select identificatie, versie, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie from locatie where noemer = 'gemeente Dinkelland' order by identificatie, versie, begingeldigheid, eindgeldigheid;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+\d locatie;
+select count(*) from locatie;
+select count(*), ispons from locatie group by ispons;
+select count(*) from locatie;
+select count(*), ispons from locatie group by ispons;
+select * from locatie where ispons = true;
+select locatietype, noemer from locatie where ispons = true;
+select id, locatietype, noemer from locatie where ispons = true;
+\d locatie
+select id, locatietype, noemer from locatie where ispons = true and parent_group_id=1610;
+select id, locatietype, noemer from locatie where ispons = true and locatietype='GEBIEDENGROEP';
+select id, locatietype, noemer from locatie where ispons = true and parent_group_id in (select id from locatie where ispons = true and locatietype='GEBIEDENGROEP')
+;
+select l1.id, l1.locatietype, l1.noemer from locatie l1 where l1.ispons = true and l1.parent_group_id in (select l2.id from locatie l2 where l2.ispons = true and l2.locatietype='GEBIEDENGROEP')
+;
+select l1.id, l1.parent_group_id, l1.locatietype, l1.noemer, l2.noemer
+from locatie l1, locatie l2
+where l1.ispons = true and
+      l1.parent_group_id = l2.id and
+      l2.ispons = true and
+      l2.locatietype = 'GEBIEDENGROEP';
+select l1.id, l1.parent_group_id, l1.locatietype, l1.noemer, l2.noemer
+from locatie l1, locatie l2
+where l1.ispons = true and
+      l1.parent_group_id = l2.id and
+      l2.ispons = true and
+      l2.locatietype = 'GEBIEDENGROEP'
+;
+select l1.id, l1.parent_group_id, l1.locatietype, l1.noemer, l2.noemer
+from locatie l1, locatie l2
+where l1.ispons = true and
+      l1.parent_group_id = l2.id and
+      l2.ispons = true and
+      l2.locatietype = 'GEBIEDENGROEP'
+ order by l1.parent_group_id;
+select id, identificatie, geldigtot from regeling;
+select id, identificatie, geldigtot from regeling where geldigtot is not null;
+select id, identificatie, geldigtot, inwerkingtot from regeling;
+select id, identificatie, geldigtot, inwerkingtot from regeling;
+select id, identificatie, type from regeling;
+select id, identificatie, citeertitel from regeling;
+select id, identificatie, opschrift from regeling;
+select id, identificatie, conditie from regeling;
+select id, identificatie, publicatie_id from regeling;
+select id, identificatie, publicatieid from regeling;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history;
+select aantal, expressionid
+from
+    (select count(*) as aantal, expressionid
+     from ontwerpregeling
+     group by expressionid)
+order by aantal desc;
+select aantal, expressionid
+from
+    (select count(*) as aantal, expressionid
+     from ontwerpregeling
+     group by expressionid)
+order by aantal desc, expressionid;
+\d ontwerpregeling
+select * from ontwerpregeling where eindregistratie is not null;
+select aantal, publicatieid
+from
+    (select count(*) as aantal, publicatieid
+     from ontwerpregeling
+     group by publicatieid)
+order by aantal desc;
+drop table ontwerpregeling;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+
+delete from flyway_schema_history where version = '1.07';
+\d
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+
+delete from flyway_schema_history;
+\d
+select * from bevoegdgezag;
+select * from bevoegdgezag order by code;
+select * from soortregeling;
+select * from soortregeling order by code;
+\d
+select * from ontwerpregeling;
+select * from flyway_schema_history ;
+\d geometry_columns 
+select * from geometry_columns ;
+SELECT name, default_version, installed_version
+FROM pg_extension
+WHERE name = 'postgis';
+SELECT extname, default_version, installed_version
+FROM pg_extension
+WHERE extname = 'postgis';
+\d pg_extension
+select oid, extname, extversion from pg_extension where extname = 'postgis' ;
+CREATE EXTENSION IF NOT EXISTS postgis;
+select * from pg_extension;
+SELECT PostGIS_Full_Version();
+SELECT * FROM pg_available_extensions WHERE name = 'postgis';
+SELECT extname, default_version, installed_version FROM pg_extension WHERE extname = 'postgis';
+SELECT * FROM pg_extension WHERE extname = 'postgis';
+\d pg_extension
+select oid, extname, extowner, extnamespace, extrelocatable, extversion from pg_extension where extname = 'postgis';
+select oid, extname, extowner, extnamespace, extrelocatable, extversion from pg_extension;
+select oid, extname, extowner, extnamespace, extrelocatable, extversion from pg_extension;
+\d
+select * from flyway_schema_history ;
+DELETE FROM flyway_schema_history WHERE version IN ('1.10', '1.11');
+create table geo
+(
+    id           bigint not null primary key,
+    geoid        text not null,
+    geometrie    geometry(Geometry, 28992) not null
+);
+create unique index geo_geoid_ix on geo (geoid);
+create index geo_geometrie_idx
+    on geo using gist (geometrie);
+ALTER TABLE geo
+ALTER
+COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME geo_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+);
+\d
+\d geo
+drop table geo;
+select * from flyway_schema_history ;
+CREATE
+EXTENSION IF NOT EXISTS postgis;
+
+create table geo
+(
+    id        bigint not null primary key,
+    geoid     text   not null,
+    geometrie geometry(Geometry, 28992) not null
+);
+
+create unique index geo_geoid_ix on geo (geoid);
+
+create index geo_geometrie_idx
+    on geo using gist (geometrie);
+
+ALTER TABLE geo
+ALTER
+COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME geo_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+);
+\d geo
+\dT *.geometry
+SELECT * FROM pg_extension;
+alter extension postgis update;
+alter user testuser with superuser;
+\d
+drop table geo
+;
+select * from flyway_schema_history ;
+select * from flyway_schema_history ;
+\d
+\d geo
+\d
+\d locatie
+select l.identificatie, l.geometrieidentificatie from locatie l;
+\d geo
+select l.identificatie, l.geometrieidentificatie from locatie l left joint geo g where l.geometrieidentificatie = g.geoid;
+select l.identificatie, l.geometrieidentificatie from locatie l left join geo g where l.geometrieidentificatie = g.geoid;
+select l.identificatie, l.geometrieidentificatie from locatie l left join geo g on l.geometrieidentificatie = g.geoid;
+select l.identificatie, l.geometrieidentificatie from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null;
+select count(*) from (select l.identificatie, l.geometrieidentificatie from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null);
+select count(*) from locatie;
+select distinct(l.geometrieidentificatie) from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null;
+select * from locatie where geometrieidentificatie = '';
+select * from locatie where geometrieidentificatie like '% %';
+select distinct(l.geometrieidentificatie) from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null;
+select q, length(q) from ( select distinct(l.geometrieidentificatie) as q from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null);
+select q, length(q) from ( select distinct(l.geometrieidentificatie) as q from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where q is null;
+select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null and dg is not null;
+select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null;
+select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null; 
+select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null order by dg;
+describe select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null order by dg;
+explain select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null order by dg;
+select * from location;
+select * from locatie;
+\d locatie
+select * from locatie;
+select dg from (select distinct(l.geometrieidentificatie) as dg from locatie l left join geo g on l.geometrieidentificatie = g.geoid where g.geoid is null) where dg is not null order by dg;
+\d
+\d geo
+select count(*) geo;
+select * from geo;
+select count(*) from geo;
+select count(*) from geo;
+select count(*) from geo;
+select count(*) from geo;
+select * from geo;
+\d geo
+select id, geoid from geo;
+SELECT DISTINCT(l.geometrieidentificatie) AS dg " +
+                            " FROM locatie l LEFT JOIN geo g ON l.geometrieidentificatie = g.geoid " +
+                            " WHERE g.geoid IS NULL;
+SELECT DISTINCT(l.geometrieidentificatie) AS dg FROM locatie l LEFT JOIN geo g ON l.geometrieidentificatie = g.geoid  WHERE g.geoid IS NULL;
+\d geo
+select g.geoid from geo; 
+select g.geoid from geo g; 
+\d locatie
+select l.noemer, g.geoid from locatie l, geo g where l.geometrieidentificatie = g.geoid;
+select l.noemer, ST_AREA(g.geometrie) from locatie l, geo g where l.geometrieidentificatie = g.geoid;
+select l.noemer, ST_AREA(g.geometrie) from locatie l, geo g where l.geometrieidentificatie = g.geoid where l.noemer is not null;
+select l.noemer, ST_AREA(g.geometrie) from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null;
+select l.noemer, ST_AREA(g.geometrie) from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null order by l.noemer;
+select l.noemer, ST_AREA(g.geometrie)/1000000 from locatie l, geo g where l.geometrieidentificatie = g.geoid and l.noemer is not null order by l.noemer;
+select count(*) from geo;
+select count(*) from locatie;
+select count(*) from regeling;
+select count(*) from ontwerpregeling;
+select count(*) from geo;
+select count(*) from geo;
+select count(*) from geo;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+select * from geometry_columns ;
+select * from spatial_ref_sys ;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+select count(*) from regeling;
+select count(*) from ontwerpregeling;
+select count(*) from locatie;
+select count(*) from geo;
+select count(*) from geo;
+select count(*) from geo;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+select count(*) from regeling;
+select count(*) from ontwerpregeling;
+select count(*) from locatie;
+select count(*) from geo;
+select count(*) from geo;
+select count(*) from geo;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+select count(*) from regeling;~
+select count(*) from ontwerpregeling;
+select count(*) from ontwerpregeling;
+select count(*) from ontwerpregeling;
+select count(*) from geo;
+SELECT 
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
+FROM pg_tables 
+WHERE schemaname NOT IN ('information_schema', 'pg_catalog')
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+SELECT pg_size_pretty(pg_database_size('ov8'));
+select pg_database_size('ov8');
+SELECT 
+    schemaname,
+    tablename,
+    n_dead_tup,
+    n_live_tup,
+    round(n_dead_tup::numeric/NULLIF(n_live_tup + n_dead_tup, 0) * 100, 2) as dead_percentage
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+select * from pg_stat_user_tables;
+\d pg_stat_user_tables
+select relid, schemaname, relname from pg_stat_user_tables;
+SELECT
+    schemaname,
+    relname,
+    n_dead_tup,
+    n_live_tup,
+    round(n_dead_tup::numeric/NULLIF(n_live_tup + n_dead_tup, 0) * 100, 2) as dead_percentage
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+VACUUM FULL flyway_schema_history;
+SELECT
+    schemaname,
+    relname,
+    n_dead_tup,
+    n_live_tup,
+    round(n_dead_tup::numeric/NULLIF(n_live_tup + n_dead_tup, 0) * 100, 2) as dead_percentage
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+select * from flyway_schema_history ;
+VACUUM ANALYZE;
+SELECT
+    schemaname,
+    relname,
+    n_dead_tup,
+    n_live_tup,
+    round(n_dead_tup::numeric/NULLIF(n_live_tup + n_dead_tup, 0) * 100, 2) as dead_percentage
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+REINDEX DATABASE database_name;
+REINDEX DATABASE ov8;
+\d locatie
+\d geo
+select distinct(locatietype) from locatie;
+\d
+\d locatie_geometrie_view 
+select locatietype,noemer,ispons,versie from locatie_geometrie_view;
+explain select locatietype,noemer,ispons,versie from locatie_geometrie_view;
+drop table bevoegdgezag;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+drop table bevoegdgezag;
+drop view locatie_geometry_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table geo;
+\d
+select count(*) from locatie;
+\d
+drop table bevoegdgezag;
+drop view locatie_geometry_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+\d
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+
+delete from flyway_schema_history;
+select * from ontwerpregeling;
+select * from ontwerplocatie;
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+drop table ontwerplocatie;
+drop table ontwerpregeling_regelingsgebied;
+drop table procedureverloop;
+
+delete from flyway_schema_history;
+select * from ontwerpregeling;
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+drop table ontwerplocatie;
+drop table ontwerpregeling_regelingsgebied;
+drop table procedureverloop;
+
+delete from flyway_schema_history;
+\d
+drop table bevoegdgezag;
+drop view locatie_geometrie_view;
+drop table locatie;
+drop table regeling;
+drop table regeling_opvolgervan;
+drop table regeling_regelingsgebied;
+drop table soortregeling;
+drop table ontwerpregeling;
+drop table soortstap;
+drop table procedurestap;
+drop table geo;
+drop table ontwerplocatie;
+drop table ontwerpregeling_regelingsgebied;
+drop table procedureverloop;
+drop table soortstap;
+
+delete from flyway_schema_history;
+select * from flyway_schema_history ;
+\d
+\s soortstap

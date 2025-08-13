@@ -12,5 +12,6 @@ drop table geo;
 drop table ontwerplocatie;
 drop table ontwerpregeling_regelingsgebied;
 drop table procedureverloop;
+drop table soortstap;
 
 delete from flyway_schema_history;
