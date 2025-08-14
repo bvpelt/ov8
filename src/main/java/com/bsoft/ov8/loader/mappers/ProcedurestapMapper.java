@@ -14,8 +14,10 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = SoortStapMapper.class)
 public interface ProcedurestapMapper {
 
+    @Mapping(source="soortStap", target="soortStap")
     ProcedureStapDTO toDTO(Procedurestap procedurestap);
 
+    @Mapping(source="soortStap", target="soortStap")
     Procedurestap toEntity(ProcedureStapDTO procedureStapDTO);
 
     List<ProcedureStapDTO> toDTOList(List<Procedurestap> procedurestappen);

@@ -3,10 +3,10 @@ create table procedureverloop
     id     bigint not null primary key,
     bekendOp   text,
     ontvangenOp text,
-    procedureverloop_id bigint
+    ontwerpregeling_id bigint
 );
 
-create unique index procedureverloop_procedureverloop_ix on procedureverloop (procedureverloop_id);
+create unique index procedureverloop_ontwerpregeling_ix on procedureverloop (ontwerpregeling_id);
 
 ALTER TABLE procedureverloop
 ALTER

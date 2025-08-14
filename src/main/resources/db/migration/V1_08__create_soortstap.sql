@@ -1,12 +1,11 @@
 create table soortstap
 (
     id     bigint not null primary key,
-    bekendOp   text,
-    ontvangenOp text,
-    procedureverloop_id bigint
+    code   text,
+    waarde text
 );
 
-create unique index soortstap_procedureverloop_ix on soortstap (procedureverloop_id);
+create unique index soortstap_code_ix on soortstap (code);
 
 ALTER TABLE soortstap
 ALTER

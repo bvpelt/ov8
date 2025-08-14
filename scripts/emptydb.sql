@@ -12,6 +12,6 @@ drop table if exists geo;
 drop table if exists ontwerplocatie;
 drop table if exists ontwerpregeling_regelingsgebied;
 drop table if exists procedureverloop;
-drop table if exists soortstap;
+drop table if exists procedurestap;
 
 delete from flyway_schema_history;

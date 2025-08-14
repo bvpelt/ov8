@@ -14,8 +14,10 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = ProcedurestapMapper.class)
 public interface ProcedureverloopMapper {
 
+    @Mapping(source="procedurestappen", target = "procedureStappen")
     ProcedureverloopDTO toDTO(Procedureverloop procedureverloop);
 
+    @Mapping(source="procedureStappen", target = "procedurestappen")
     Procedureverloop toEntity(ProcedureverloopDTO procedureverloopDTO);
 
     List<ProcedureverloopDTO> toDTOList(List<Procedureverloop> procedureverloops);

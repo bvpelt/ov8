@@ -128,38 +128,22 @@ public class OntwerpRegelingDTOSaver {
             }
         }
 
-        if (optionalOntwerpRegelingDTO.isEmpty()) {
-            log.debug("+++> New OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} not exists. Saving ontwerpregeling.",
-                    ontwerpRegelingDTO.getIdentificatie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
-
-            ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
-
-            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
-
-        } else {
-            log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
-                    ontwerpRegelingDTO.getIdentificatie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
-
-            ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
-
-            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
-        }
-
 
         // Procedurestappen
         ProcedureverloopDTO procedureverloopDTO = procedureverloopMapper.toDTO(ontwerpregeling.getProcedureverloop());
         log.info("Procedureverloop: {}", ontwerpregeling.getProcedureverloop());
-        procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
+
         procedureverloopRepository.save(procedureverloopDTO);
 
         if (ontwerpregeling.getProcedureverloop() != null) {
             ontwerpregeling.getProcedureverloop().getProcedurestappen().forEach(procedurestap -> {
                 ProcedureStapDTO procedureStapDTO = procedurestapMapper.toDTO(procedurestap);
                 SoortStapDTO soortStapDTO = procedureStapDTO.getSoortStap();
+
+                Optional<SoortStapDTO> optionalSoortStapDTO = soortStapRepository.findByCode(soortStapDTO.getCode());
+                if (optionalSoortStapDTO.isEmpty()) {
+                    soortStapRepository.save(soortStapDTO);
+                }
                 procedureStapDTO.setSoortStap(soortStapDTO);
                 procedureStapDTO.setProcedureverloop(procedureverloopDTO);
                 procedureStapRepository.save(procedureStapDTO);
@@ -179,6 +163,31 @@ public class OntwerpRegelingDTOSaver {
         log.info("ProcedureverloopDTO: {}", procedureverloopDTO);
 
 
+        if (optionalOntwerpRegelingDTO.isEmpty()) {
+            log.debug("+++> New OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} not exists. Saving ontwerpregeling.",
+                    ontwerpRegelingDTO.getIdentificatie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
+
+            ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
+
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+
+            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
+            procedureverloopRepository.save(procedureverloopDTO);
+
+        } else {
+            log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
+                    ontwerpRegelingDTO.getIdentificatie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
+
+            ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
+
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
+            procedureverloopRepository.save(procedureverloopDTO);
+        }
 
 
         managedOntwerpRegelingDTO.setProcedureverloop(procedureverloopDTO);
