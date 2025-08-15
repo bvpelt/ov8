@@ -1,6 +1,5 @@
 package com.bsoft.ov8.loader.repositories;
 
-import com.bsoft.ov8.loader.database.ProcedureStapDTO;
 import com.bsoft.ov8.loader.database.SoortStapDTO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;

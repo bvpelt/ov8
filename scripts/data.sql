@@ -136,3 +136,83 @@ select g1.id, g2.id
 from geo g1, geo g2
 where g1.id <> g2.id and ST_Intersects(g1.geometrie, g2.geometrie)
 order by g1.id, g2.id;
+
+
+select o.identificatie, o.versie, pvl.bekendop,  pvl.ontvangenop, ps.id, ps.voltooidop, ps.actor, s.id, s.waarde, s.code
+        from ontwerpregeling o, procedureverloop pvl, procedurestap ps, soortstap s
+        where pvl.ontwerpregeling_id = o.id and
+            ps.procedureverloop_id = pvl.id and
+            s.id = ps.soortstap_id
+        order by
+            o.identificatie,
+            o.versie,
+            ps.voltooidop,
+            ps.id;
+
+--
+-- aggregeer bounding box van gebieden in een gebiedengroep
+--
+with box as (
+    SELECT l.id as id, BOX2d(ST_Union(g.geometrie)) AS bounding_box
+    FROM locatie l
+             JOIN locatie lg ON lg.parent_group_id = l.id
+             JOIN geo g ON g.geoid = lg.geometrieidentificatie
+
+    WHERE l.locatietype = 'GEBIEDENGROEP'
+      AND lg.locatietype = 'GEBIED'
+    group by l.id )
+select box.id,
+       st_xmin(box.bounding_box) as xmin,
+       st_xmax(box.bounding_box) as xmax,
+       st_ymin(box.bounding_box) as ymin,
+       st_ymax(box.bounding_box) as ymax
+from box;
+
+--
+-- update boundingbox van gebiedengroepen
+WITH box AS (
+    SELECT l.id AS id,
+           st_xmin(BOX2D(ST_Union(g.geometrie))) AS xmin,
+           st_xmax(BOX2D(ST_Union(g.geometrie))) AS xmax,
+           st_ymin(BOX2D(ST_Union(g.geometrie))) AS ymin,
+           st_ymax(BOX2D(ST_Union(g.geometrie))) AS ymax
+    FROM locatie l
+             JOIN locatie lg ON lg.parent_group_id = l.id
+             JOIN geo g ON g.geoid = lg.geometrieidentificatie
+    WHERE l.locatietype = 'GEBIEDENGROEP'
+      AND lg.locatietype = 'GEBIED'
+    GROUP BY l.id
+)
+UPDATE locatie
+SET minx = box.xmin,
+    maxx = box.xmax,
+    miny = box.ymin,
+    maxy = box.ymax
+FROM box
+WHERE locatie.id = box.id;
+
+-- select bounding box
+--
+WITH box AS (
+    SELECT groep.id AS id,
+           ST_XMin(bbox) AS xmin,
+           ST_XMax(bbox) AS xmax,
+           ST_YMin(bbox) AS ymin,
+           ST_YMax(bbox) AS ymax
+    FROM (
+             SELECT l.id, BOX2D(ST_Union(g.geometrie)) AS bbox
+             FROM locatie l
+                      JOIN locatie lg ON lg.parent_group_id = l.id
+                      JOIN geo g ON g.geoid = lg.geometrieidentificatie
+             WHERE l.locatietype = 'GEBIEDENGROEP'
+               AND lg.locatietype = 'GEBIED'
+             GROUP BY l.id
+         ) AS groep
+)
+UPDATE locatie
+SET minx = box.xmin,
+    maxx = box.xmax,
+    miny = box.ymin,
+    maxy = box.ymax
+FROM locatie l, box
+WHERE locatie.id = box.id;

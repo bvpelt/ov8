@@ -13,20 +13,5 @@ public interface BevoegdGezagMapper {
     @Mapping(source = "bestuurslaag", target = "bestuurslaag")
     @Mapping(source = "code", target = "code")
     BevoegdGezagDTO toBevoegdGezagDTO(BevoegdGezag bevoegdGezag);
-/*
-    // Custom mapping method for 'aangeleverdDoorEen' to a Set<BevoegdGezagDTO>
-    @Named("mapSingleBevoegdGezagToSet")
-    default Set<BevoegdGezagDTO> mapSingleBevoegdGezagToSet(BevoegdGezag bevoegdGezag) {
-        if (bevoegdGezag == null) {
-            return Collections.emptySet(); // Return an empty set if the source is null
-        }
-        // Map the single BevoegdGezag to BevoegdGezagDTO
-        BevoegdGezagDTO dto = toBevoegdGezagDTO(bevoegdGezag);
-        // Add it to a new HashSet
-        Set<BevoegdGezagDTO> bevoegdGezagDTOSet = new HashSet<>();
-        bevoegdGezagDTOSet.add(dto);
-        return bevoegdGezagDTOSet;
-    }
 
- */
 }

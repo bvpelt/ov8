@@ -54,13 +54,13 @@ public class OntwerpRegelingDTO implements Serializable {
     @Column(name = "expressionid")
     private String expressionId;
 
-    //    private SoortRegeling type;
+    // private SoortRegeling type;
     // This is the "many" side of the Many-to-One relationship.
-    // Each RegelingDTO has one BevoegdGezagDTO.
+    // Each OntwerpRegelingDTO has one BevoegdGezagDTO.
     // The foreign key column will be created in the 'regeling' table.
     @ManyToOne // Default fetch type is EAGER for ManyToOne, consider LAZY if performance is an issue
-    @JoinColumn(name = "soortregeling_id") // Specifies the foreign key column name in the RegelingDTO table
-    private SoortRegelingDTO type; // Singular, as each Regeling has one BG
+    @JoinColumn(name = "soortregeling_id") // Specifies the foreign key column name in the OntwerpRegelingDTO table
+    private SoortRegelingDTO type; // Singular, as each OntwerpRegeling has one BG
 
     @Embedded
     private OntwerpregistratiegegevensDTO geregistreerdMet;
@@ -86,9 +86,8 @@ public class OntwerpRegelingDTO implements Serializable {
     @Column(name = "publicatieid")
     private String publicatieID;
 
-//    @Embedded
-//    private ProcedureverloopDTO procedureverloop;
-// 1:1 relationship with ProcedureverloopDTO
+
+    // 1:1 relationship with ProcedureverloopDTO
     @OneToOne(mappedBy = "ontwerpRegeling", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private ProcedureverloopDTO procedureverloop;
 

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +17,6 @@ import java.util.Optional;
 public class OntwerpRegelingDTOSaver {
     private final LocatieMapper locatieMapper;
     private final OntwerpLocatieMapper ontwerpLocatieMapper;
-    private final OntwerpRegelingMapper ontwerpRegelingMapper;
     private final ProcedureverloopMapper procedureverloopMapper;
 
     private final BevoegdGezagRepository bevoegdGezagRepository;
@@ -43,7 +41,7 @@ public class OntwerpRegelingDTOSaver {
                                    OntwerpLocatieMapper ontwerpLocatieMapper,
                                    OntwerpRegelingMapper ontwerpRegelingMapper,
                                    ProcedureverloopMapper procedureverloopMapper,
-                                   ProcedurestapMapper procedurestapMapper) {
+                                   ProcedurestapMapper procedurestapMapper, SoortStapMapper soortStapMapper) {
         this.bevoegdGezagRepository = bevoegdGezagRepository;
         this.ontwerpRegelingRepository = ontwerpRegelingRepository;
         this.soortRegelingRepository = soortRegelingRepository;
@@ -54,7 +52,6 @@ public class OntwerpRegelingDTOSaver {
         this.soortStapRepository = soortStapRepository;
         this.locatieMapper = locatieMapper;
         this.ontwerpLocatieMapper = ontwerpLocatieMapper;
-        this.ontwerpRegelingMapper = ontwerpRegelingMapper;
         this.procedureverloopMapper = procedureverloopMapper;
         this.procedurestapMapper = procedurestapMapper;
     }
@@ -74,8 +71,44 @@ public class OntwerpRegelingDTOSaver {
                 ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
                 ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
 
-
         // Locaties
+        saveLocaties(ontwerpregeling);
+
+        // Procedurestappen
+        ProcedureverloopDTO procedureverloopDTO = saveProcedureverloop(ontwerpregeling.getProcedureverloop());
+
+        if (optionalOntwerpRegelingDTO.isEmpty()) {
+            log.debug("+++> New OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} not exists. Saving ontwerpregeling.",
+                    ontwerpRegelingDTO.getIdentificatie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
+
+            ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
+
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+
+            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
+            procedureverloopRepository.save(procedureverloopDTO);
+
+        } else {
+            log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
+                    ontwerpRegelingDTO.getIdentificatie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
+                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
+
+            ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
+
+            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
+            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
+            procedureverloopRepository.save(procedureverloopDTO);
+        }
+
+        managedOntwerpRegelingDTO.setProcedureverloop(procedureverloopDTO);
+
+        return managedOntwerpRegelingDTO;
+    }
+
+    private void saveLocaties(Ontwerpregeling ontwerpregeling) {
         if (ontwerpregeling.getEmbedded() != null) {
             log.debug("01 ontwerpregeling has embedded");
             EmbeddedOntwerpLocatie embeddedOntwerpLocatie = ontwerpregeling.getEmbedded().getOntwerpRegelingsgebied();
@@ -88,7 +121,7 @@ public class OntwerpRegelingDTOSaver {
                 if (optionalOntwerpLocatieDTO.isEmpty()) {
                     log.debug("03 ontwerplocatie not present saving: {}, {}", ontwerpLocatie.getIdentificatie(), ontwerpLocatie.getGeometrieIdentificatie());
                     managedOntwerpLocatieDTO = ontwerpLocatieRepository.save(ontwerpLocatie);
-                }   else {
+                } else {
                     log.debug("04 ontwerplocatie present using: {}, {}", optionalOntwerpLocatieDTO.get().getIdentificatie(), optionalOntwerpLocatieDTO.get().getGeometrieIdentificatie());
                     managedOntwerpLocatieDTO = optionalOntwerpLocatieDTO.get();
                 }
@@ -119,7 +152,7 @@ public class OntwerpRegelingDTOSaver {
                         Optional<LocatieDTO> optionalLocatieDTO = locatieRepository.findByIdentificatieAndGeometrieIdentificatie(locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
                         if (!optionalLocatieDTO.isPresent()) {
                             log.debug("09 locatie not present saving: {}, {}", locatie.getIdentificatie(), locatie.getGeometrieIdentificatie());
-                           // locatie.setParentGroup(managedOntwerpLocatieDTO);
+                            // locatie.setParentGroup(managedOntwerpLocatieDTO);
                             LocatieDTO managedLocatieDTO = locatieRepository.save(locatie);
                             omvatVastgesteld.add(managedLocatieDTO);
                         }
@@ -127,72 +160,6 @@ public class OntwerpRegelingDTOSaver {
                 }
             }
         }
-
-
-        // Procedurestappen
-        ProcedureverloopDTO procedureverloopDTO = procedureverloopMapper.toDTO(ontwerpregeling.getProcedureverloop());
-        log.info("Procedureverloop: {}", ontwerpregeling.getProcedureverloop());
-
-        procedureverloopRepository.save(procedureverloopDTO);
-
-        if (ontwerpregeling.getProcedureverloop() != null) {
-            ontwerpregeling.getProcedureverloop().getProcedurestappen().forEach(procedurestap -> {
-                ProcedureStapDTO procedureStapDTO = procedurestapMapper.toDTO(procedurestap);
-                SoortStapDTO soortStapDTO = procedureStapDTO.getSoortStap();
-
-                Optional<SoortStapDTO> optionalSoortStapDTO = soortStapRepository.findByCode(soortStapDTO.getCode());
-                if (optionalSoortStapDTO.isEmpty()) {
-                    soortStapRepository.save(soortStapDTO);
-                }
-                procedureStapDTO.setSoortStap(soortStapDTO);
-                procedureStapDTO.setProcedureverloop(procedureverloopDTO);
-                procedureStapRepository.save(procedureStapDTO);
-                soortStapDTO.getProcdurestappen().add(procedureStapDTO);
-                soortStapRepository.save(soortStapDTO);
-            });
-        }
-        procedureverloopDTO.getProcedureStappen().forEach(procedureStap -> {
-            log.info("ProcedureStap: {}", procedureStap);
-            procedureStap.setProcedureverloop(procedureverloopDTO);
-            SoortStapDTO soortStapDTO = procedureStap.getSoortStap();
-            soortStapRepository.save(soortStapDTO);
-            procedureStap.setSoortStap(soortStapDTO);
-            procedureStapRepository.save(procedureStap);
-            log.info("ProcedureStap: {}", procedureStap);
-        });
-        log.info("ProcedureverloopDTO: {}", procedureverloopDTO);
-
-
-        if (optionalOntwerpRegelingDTO.isEmpty()) {
-            log.debug("+++> New OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} not exists. Saving ontwerpregeling.",
-                    ontwerpRegelingDTO.getIdentificatie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
-
-            ontwerpRegelingDTO = oneToMany(ontwerpRegelingDTO);
-
-            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
-
-            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
-            procedureverloopRepository.save(procedureverloopDTO);
-
-        } else {
-            log.debug("---> Existing OntwerpRegeling identificatie {} tijdstipRegistratie: {}, eindRegistratie: {} exists. Skipping save for now. <---",
-                    ontwerpRegelingDTO.getIdentificatie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getTijdstipRegistratie(),
-                    ontwerpRegelingDTO.getGeregistreerdMet().getEindRegistratie());
-
-            ontwerpRegelingDTO = oneToMany(optionalOntwerpRegelingDTO.get());
-
-            managedOntwerpRegelingDTO = ontwerpRegelingRepository.save(ontwerpRegelingDTO);
-            procedureverloopDTO.setOntwerpRegeling(managedOntwerpRegelingDTO);
-            procedureverloopRepository.save(procedureverloopDTO);
-        }
-
-
-        managedOntwerpRegelingDTO.setProcedureverloop(procedureverloopDTO);
-
-        return managedOntwerpRegelingDTO;
     }
 
     private OntwerpRegelingDTO oneToMany(OntwerpRegelingDTO ontwerpRegelingDTO) {
@@ -219,5 +186,36 @@ public class OntwerpRegelingDTOSaver {
             ontwerpRegelingDTO.setType(managedSoortRegelingDTO);
         }
         return ontwerpRegelingDTO;
+    }
+
+    private ProcedureverloopDTO saveProcedureverloop(Procedureverloop procedureverloop) {
+        log.debug("Saving Procedureverloop: {}", procedureverloop);
+        // Convert and save the main procedureverloop
+        ProcedureverloopDTO procedureverloopDTO = procedureverloopMapper.toDTO(procedureverloop);
+        procedureverloopDTO = procedureverloopRepository.save(procedureverloopDTO);
+
+        // Handle procedure steps manually
+        if (procedureverloop.getProcedurestappen() != null && !procedureverloop.getProcedurestappen().isEmpty()) {
+            for (Procedurestap procedurestap : procedureverloop.getProcedurestappen()) {
+                ProcedureStapDTO procedureStapDTO = procedurestapMapper.toDTO(procedurestap);
+
+                // Handle SoortStap
+                SoortStapDTO soortStapDTO = procedureStapDTO.getSoortStap();
+                SoortStapDTO persistedSoortStapDTO = soortStapRepository
+                        .findByCode(soortStapDTO.getCode())
+                        .orElseGet(() -> soortStapRepository.save(soortStapDTO));
+
+                // Set relationships
+                procedureStapDTO.setSoortStap(persistedSoortStapDTO);
+                procedureStapDTO.setProcedureverloop(procedureverloopDTO);
+
+                // Save and add to collection
+                ProcedureStapDTO savedStep = procedureStapRepository.save(procedureStapDTO);
+                procedureverloopDTO.addProcedureStap(savedStep);
+            }
+        }
+        log.debug("Saving ProcedureverloopDTO: {}", procedureverloopDTO);
+
+        return procedureverloopDTO;
     }
 }

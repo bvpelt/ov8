@@ -1,8 +1,8 @@
 create table procedureverloop
 (
-    id     bigint not null primary key,
-    bekendOp   text,
-    ontvangenOp text,
+    id                 bigint not null primary key,
+    bekendOp           text,
+    ontvangenOp        text,
     ontwerpregeling_id bigint
 );
 

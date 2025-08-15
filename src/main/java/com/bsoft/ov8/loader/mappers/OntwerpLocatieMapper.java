@@ -2,14 +2,11 @@ package com.bsoft.ov8.loader.mappers;
 
 
 import com.bsoft.ov8.loader.database.OntwerpLocatieDTO;
-
 import nl.overheid.omgevingswet.ozon.presenteren.model.EmbeddedOntwerpLocatie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
-
 
 
 @Mapper(componentModel = "spring",

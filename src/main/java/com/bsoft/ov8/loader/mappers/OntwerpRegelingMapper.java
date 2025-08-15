@@ -32,7 +32,6 @@ public abstract class OntwerpRegelingMapper {
     @Mapping(source = "heeftToelichtingen", target = "heeftToelichtingen")
     @Mapping(source = "isVervangRegeling", target = "isVervangRegeling")
     @Mapping(source = "publicatieID", target = "publicatieID")
-    //@Mapping(source = "procedureverloop", target = "procedureverloop")
     public abstract OntwerpRegelingDTO toOntwerpRegelingDTO(Ontwerpregeling ontwerpRegeling);
 
 

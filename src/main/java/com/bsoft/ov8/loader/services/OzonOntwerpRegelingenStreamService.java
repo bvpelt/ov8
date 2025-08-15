@@ -86,12 +86,12 @@ public class OzonOntwerpRegelingenStreamService {
     /**
      * Get all ontwerpregelingen following the OpenAPI spec signature
      *
-     * @param beschikbaarOp     Time travel parameter along the 'available' timeline
+     * @param beschikbaarOp           Time travel parameter along the 'available' timeline
      * @param synchroniseerMetTileset Synchronize with tileset moment
-     * @param expand            Load related embedded resources
-     * @param page              Page number (minimum 1)
-     * @param size              Page size (minimum 1, maximum 200)
-     * @param sort              Sorting parameters
+     * @param expand                  Load related embedded resources
+     * @param page                    Page number (minimum 1)
+     * @param size                    Page size (minimum 1, maximum 200)
+     * @param sort                    Sorting parameters
      * @return Mono containing the Ontwerpregelingen response
      */
     public Mono<Ontwerpregelingen> getOntwerpregelingen(
