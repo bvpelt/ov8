@@ -216,3 +216,18 @@ SET minx = box.xmin,
     maxy = box.ymax
 FROM locatie l, box
 WHERE locatie.id = box.id;
+
+--
+-- union van locatie en ontwerplocatie
+--
+SELECT id, parent_group_id, identificatie, versie,noemer, locatietype, geometrieidentificatie,  minx, miny, maxx, maxy, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie, ontwerpbesluitid, technischid, status, type
+FROM (
+         SELECT id, parent_group_id, identificatie, versie,noemer, locatietype, geometrieidentificatie,  minx, miny, maxx, maxy, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie, NULL AS ontwerpbesluitid, NULL AS technischid, NULL AS status, 'locatie' as type
+         FROM locatie
+
+         UNION ALL
+
+         SELECT id, parent_group_id, identificatie,versie,noemer, locatietype, geometrieidentificatie, minx, miny, maxx, maxy, begingeldigheid, eindgeldigheid, tijdstipregistratie, eindregistratie, ontwerpbesluitid, technischid, status, 'ontwerplocatie' as type
+         FROM ontwerplocatie
+     ) AS combined
+order by identificatie;
