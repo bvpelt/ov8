@@ -17,6 +17,10 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -259,5 +263,41 @@ public class OzonRegelingHistoryService {
                 .bodyToMono(Regeling.class)
                 .doOnError(e -> log.error("API call error for {}: {}", uriIdentifier, e.getMessage()))
                 .onErrorResume(e -> Mono.empty());
+    }
+
+    /**
+     * Process all regelingen with version > 1 sequentially and return list of processed identifications
+     */
+    public List<String> processAllAndReturnIdentifications() {
+        final long start = System.currentTimeMillis();
+
+        Set<String> processedIdentifications = new HashSet<>();
+
+        retrieveAndSaveHistoricalRegelingen()
+                .doOnNext(regelingDTO -> {
+                    if (regelingDTO != null) {
+                        processedIdentifications.add(regelingDTO.getIdentificatie());
+                    }
+                })
+                .blockLast(); // Block to ensure completion
+
+        log.info("Duration: {} ms", (System.currentTimeMillis() - start));
+        log.info("Processed historical data for {} unique regelingen", processedIdentifications.size());
+
+        return new ArrayList<>(processedIdentifications);
+    }
+
+    /**
+     * Alternative method: Get list of identifications for which historical data exists in database
+     */
+    public List<String> getStoredHistoricalRegelingenIdentifications() {
+        return Mono.fromCallable(() -> {
+                    // Get all regelingen that have multiple versions (indicating historical data exists)
+                    List<String> identifications = regelingRepository.findDistinctIdentificatieByVersieGreaterThan(1);
+                    log.info("Found {} regelingen with historical data in database", identifications.size());
+                    return identifications;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .block();
     }
 }

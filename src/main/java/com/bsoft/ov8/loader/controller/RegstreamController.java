@@ -31,8 +31,10 @@ public class RegstreamController {
 
     @GetMapping("/regelingenx")
     public void saveRegelingenx(
-            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
+            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
     ) {
         List<RegelingenSort> sort = List.of(RegelingenSort.REGISTRATIETIJDSTIP);
         LocalDate geldigOp = LocalDate.now();
@@ -52,11 +54,11 @@ public class RegstreamController {
                 sort,
                 null
         );
+
         long end = System.currentTimeMillis();
 
         log.info("Processing time: {} ms", end - start);
     }
-
 
     @GetMapping(value = "/regelingen", produces = MediaType.TEXT_PLAIN_VALUE)
     public Flux<String> saveRegelingen(
@@ -115,6 +117,4 @@ public class RegstreamController {
                 null
         );
     }
-
-
 }

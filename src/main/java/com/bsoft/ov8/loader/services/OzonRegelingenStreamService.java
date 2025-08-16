@@ -203,17 +203,18 @@ public class OzonRegelingenStreamService {
     ) {
         return getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, _expand, inwerkingTot, geldigTot, initialPage, size, sort, fields)
                 .flatMap(regeling -> {
+                    long start = System.currentTimeMillis();
                     try {
                         log.debug("Processing regeling {}", regeling.getIdentificatie().toString());
                         RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
                         regelingDTOSaver.saveRegeling(regelingDTO, regeling);
 
                         // Return the identification on success
-                        return Mono.just("PROCESSED: " + regeling.getIdentificatie() + "\n");
+                        return Mono.just("PROCESSED: " + regeling.getIdentificatie() + " time: " + (System.currentTimeMillis() - start) + "\n");
                     } catch (Exception e) {
                         log.error("Error processing regeling {}: {}", regeling.getIdentificatie(), e.getMessage());
                         // Return error message
-                        return Mono.just("ERROR: " + regeling.getIdentificatie() + " - " + e.getMessage() + "\n");
+                        return Mono.just("ERROR: " + regeling.getIdentificatie() + " time: " + (System.currentTimeMillis() - start) + " - " + e.getMessage() + "\n");
                     }
                 })
                 .doOnError(e -> {

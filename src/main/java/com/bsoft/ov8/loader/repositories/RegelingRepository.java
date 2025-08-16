@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -32,4 +33,7 @@ public interface RegelingRepository extends PagingAndSortingRepository<RegelingD
             value =
                     "SELECT * FROM regeling WHERE versie > :version order by identificatie", nativeQuery = true)
     List<RegelingDTO> findByVersieGreaterThan(Integer version);
+
+    @Query("SELECT DISTINCT r.identificatie FROM RegelingDTO r WHERE r.registratiegegevens.versie > :minVersion")
+    List<String> findDistinctIdentificatieByVersieGreaterThan(@Param("minVersion") Integer minVersion);
 }
