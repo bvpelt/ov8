@@ -209,7 +209,10 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <!--
                             <inputSpec>${project.basedir}/src/main/resources/ozon-presenteren-v8.0.2.json</inputSpec>
+                            -->
+                            <inputSpec>${project.basedir}/src/main/resources/ozon-presenteren-v8.0.9.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
                             <output>${project.build.directory}/generated-sources/openapi</output>

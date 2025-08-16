@@ -60,15 +60,18 @@ curl http://localhost:8080/save/geometrie
 Check results
 ```sql
 select count(*) from regeling;
---- # 1 1480 REGELINGEN
---- # 2 1972 REGELINGEN
+--- # 1 1502 REGELINGEN
+--- # 2 1985 REGELINGEN
 
 select count(*) from ontwerpregeling;
---- # 1  430 ONTWERPREGELINGEN
+--- # 1  437 ONTWERPREGELINGEN
 
 select count(*) from locatie;
---- # 1 1983 locaties
+--- # 1 2072 locaties
+
+select count(*) from ontwerplocatie;
+--- 173
 
 select count(*) from geo;
---- # 1 1006
+--- # 1 1121
 ```

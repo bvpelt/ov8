@@ -1,5 +1,6 @@
 package com.bsoft.ov8.loader.services;
 
+import com.bsoft.ov8.loader.controller.ProcessedRegelingResult;
 import com.bsoft.ov8.loader.database.RegelingDTO;
 import com.bsoft.ov8.loader.mappers.RegelingMapper;
 import com.bsoft.ov8.loader.utils.RegelingDTOSaver;
@@ -182,6 +183,86 @@ public class OzonRegelingenStreamService {
                     log.info("Duration: " + (System.currentTimeMillis() - start));
                 })
                 .subscribe();
+    }
+
+
+    /**
+     * Process all regelingen and return a stream of identifications
+     */
+    public Flux<String> processAllWithIdentifications(
+            LocalDate geldigOp,
+            LocalDate inWerkingOp,
+            OffsetDateTime beschikbaarOp,
+            Boolean _expand,
+            String inwerkingTot,
+            String geldigTot,
+            Integer initialPage,
+            Integer size,
+            List<RegelingenSort> sort,
+            String fields
+    ) {
+        return getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, _expand, inwerkingTot, geldigTot, initialPage, size, sort, fields)
+                .flatMap(regeling -> {
+                    try {
+                        log.debug("Processing regeling {}", regeling.getIdentificatie().toString());
+                        RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
+                        regelingDTOSaver.saveRegeling(regelingDTO, regeling);
+
+                        // Return the identification on success
+                        return Mono.just("PROCESSED: " + regeling.getIdentificatie() + "\n");
+                    } catch (Exception e) {
+                        log.error("Error processing regeling {}: {}", regeling.getIdentificatie(), e.getMessage());
+                        // Return error message
+                        return Mono.just("ERROR: " + regeling.getIdentificatie() + " - " + e.getMessage() + "\n");
+                    }
+                })
+                .doOnError(e -> {
+                    log.error("Error during processing: {}", e.getMessage());
+                });
+    }
+
+    /**
+     * Process all regelingen and return a stream of detailed results
+     */
+    public Flux<ProcessedRegelingResult> processAllWithDetailedResults(
+            LocalDate geldigOp,
+            LocalDate inWerkingOp,
+            OffsetDateTime beschikbaarOp,
+            Boolean _expand,
+            String inwerkingTot,
+            String geldigTot,
+            Integer initialPage,
+            Integer size,
+            List<RegelingenSort> sort,
+            String fields
+    ) {
+        return getAllRegelingen(geldigOp, inWerkingOp, beschikbaarOp, _expand, inwerkingTot, geldigTot, initialPage, size, sort, fields)
+                .flatMap(regeling -> {
+                    long start = System.currentTimeMillis();
+                    try {
+                        log.debug("Processing regeling {}", regeling.getIdentificatie());
+                        RegelingDTO regelingDTO = regelingMapper.toRegelingDTO(regeling);
+                        regelingDTOSaver.saveRegeling(regelingDTO, regeling);
+
+                        return Mono.just(new ProcessedRegelingResult(
+                                regeling.getIdentificatie().toString(),
+                                "SUCCESS",
+                                "Regeling processed successfully",
+                                System.currentTimeMillis() - start
+                        ));
+                    } catch (Exception e) {
+                        log.error("Error processing regeling {}: {}", regeling.getIdentificatie(), e.getMessage());
+                        return Mono.just(new ProcessedRegelingResult(
+                                regeling.getIdentificatie().toString(),
+                                "ERROR",
+                                e.getMessage(),
+                                System.currentTimeMillis() - start
+                        ));
+                    }
+                })
+                .doOnError(e -> {
+                    log.error("Error during processing: {}", e.getMessage());
+                });
     }
 
 }

@@ -10,6 +10,8 @@ import org.springframework.util.unit.DataSize;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
 @Configuration
 public class WebClientConfig {
@@ -38,13 +40,42 @@ public class WebClientConfig {
                             configurer.defaultCodecs().maxInMemorySize((int) maxInMemorySize.toBytes());
                         })
                         .build())
-                .defaultHeader("X-API-KEY", ozonApiKey) // Common API key header
+                .defaultHeader("x-api-key", ozonApiKey) // Common API key header
                 // Add the request/response logging filter
                 .filter((request, next) -> {
                     log.debug("---- Outgoing WebClient Request (Filter) ----");
                     log.debug("URI: " + request.url());
                     log.debug("Method: " + request.method());
-                    request.headers().forEach((name, values) -> log.debug(name + ": " + values));
+
+                    // Log query parameters
+                    if (request.url().getQuery() != null && !request.url().getQuery().isEmpty()) {
+                        log.debug("Query Parameters");
+                        String[] params = request.url().getQuery().split("&");
+                        for (String param : params) {
+                            String[] keyValue = param.split("=", 2);
+                            if (keyValue.length == 2) {
+                                String key = java.net.URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
+                                String value = java.net.URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
+                                log.debug("  {} = {}", key, value);
+                            } else {
+                                log.debug("  {} (no value)", keyValue[0]);
+                            }
+                        }
+                    } else {
+                        log.debug("No query parameters");
+                    }
+
+                    // Log headers
+                    log.debug("Headers:");
+                    request.headers().forEach((name, values) -> {
+                        log.debug("  {}: {}", name, String.join(", ", values));
+                    });
+
+                    // Log body if present (be careful with large payloads)
+                    if (request.body() != null) {
+                        log.debug("Body: present (type: {})", request.body().getClass().getSimpleName());
+                    }
+
                     log.debug("----------------------------------------------");
                     return next.exchange(request);
                 });

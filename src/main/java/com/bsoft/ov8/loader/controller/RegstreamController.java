@@ -9,10 +9,12 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.overheid.omgevingswet.ozon.presenteren.model.RegelingenSort;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -27,8 +29,8 @@ public class RegstreamController {
 
     private final OzonRegelingenStreamService ozonRegelingenStreamService;
 
-    @GetMapping("/regelingen")
-    public void saveRegelingen(
+    @GetMapping("/regelingenx")
+    public void saveRegelingenx(
             @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
             @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
     ) {
@@ -54,4 +56,65 @@ public class RegstreamController {
 
         log.info("Processing time: {} ms", end - start);
     }
+
+
+    @GetMapping(value = "/regelingen", produces = MediaType.TEXT_PLAIN_VALUE)
+    public Flux<String> saveRegelingen(
+            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
+    ) {
+        List<RegelingenSort> sort = List.of(RegelingenSort.REGISTRATIETIJDSTIP);
+        LocalDate geldigOp = LocalDate.now();
+        OffsetDateTime beschikbaarOp = OffsetDateTime.now(ZoneOffset.UTC);
+
+        long start = System.currentTimeMillis();
+
+        return ozonRegelingenStreamService.processAllWithIdentifications(
+                        geldigOp,
+                        geldigOp,
+                        beschikbaarOp,
+                        true,
+                        null,
+                        null,
+                        page,
+                        size,
+                        sort,
+                        null
+                )
+                .doOnComplete(() -> {
+                    long end = System.currentTimeMillis();
+                    log.info("Processing time: {} ms", end - start);
+                })
+                .doOnError(error -> log.error("Error processing regelingen: {}", error.getMessage()));
+    }
+
+    // Alternative endpoint that returns JSON stream
+    @GetMapping(value = "/regelingen/json", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<ProcessedRegelingResult> saveRegelingenJson(
+            @Min(1) @Parameter(name = "page", description = "De page moet minimaal een waarde van 1 hebben.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @Min(1) @Max(200) @Parameter(name = "size", description = "De pagesize moet minimaal een waarde van 1 hebben en maximaal een waarde van 200.", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
+    ) {
+        List<RegelingenSort> sort = List.of(RegelingenSort.REGISTRATIETIJDSTIP);
+        LocalDate geldigOp = LocalDate.now();
+        OffsetDateTime beschikbaarOp = OffsetDateTime.now(ZoneOffset.UTC);
+
+        return ozonRegelingenStreamService.processAllWithDetailedResults(
+                geldigOp,
+                geldigOp,
+                beschikbaarOp,
+                true,
+                null,
+                null,
+                page,
+                size,
+                sort,
+                null
+        );
+    }
+
+
 }

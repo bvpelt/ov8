@@ -84,6 +84,7 @@ public class RegelingDTOSaver {
                     regelingDTO.getRegistratiegegevens().getTijdstipRegistratie(),
                     regelingDTO.getRegistratiegegevens().getBeginGeldigheid());
 
+            regelingDTO = optionalRegelingDTO.get();
             manyToOne(regelingDTO, regeling);
             savedRegelingDTO = regelingRepository.save(regelingDTO);
         }

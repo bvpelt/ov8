@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(of = {"identificatie", "ontwerpbesluitid", "technischid", "geometrieIdentificatie"})
+@EqualsAndHashCode(of = {"identificatie", "geometrieIdentificatie", "ontwerpbesluitId", "technischId" })
 @ToString(exclude = {"regelingsgebieden"})
 @Entity
 @Table(name = "ontwerplocatie", schema = "public", catalog = "ov8")

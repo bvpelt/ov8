@@ -14,4 +14,4 @@ drop table if exists ontwerpregeling_regelingsgebied;
 drop table if exists procedureverloop;
 drop table if exists procedurestap;
 
-delete from flyway_schema_history;
+delete from flyway_schema_history where installed_rank > 0;

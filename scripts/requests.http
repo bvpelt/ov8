@@ -1,0 +1,22 @@
+GET https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/openapi.yaml
+Accept: application/yaml
+x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee
+
+###
+GET https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/app-info
+Accept: application/json
+x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee
+
+###
+GET https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/app-health
+Accept: application/json
+x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee
+
+###
+GET https://service.omgevingswet.overheid.nl/publiek/omgevingsdocumenten/api/presenteren/v8/regelingen/_akn_nl_act_mnre1153_2013_Kempenland-West?geldigOp=2022-11-25&inWerkingOp=2022-11-25&beschikbaarOp='2024-01-01T21:59:59+02:00'
+accept: application/hal+json
+x-api-key: 8b9b4c2f-81a8-490a-acf4-82d82c77beee
+
+
+###
+
